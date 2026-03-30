@@ -24,9 +24,7 @@ export function Login({ onBack, onSignIn, onSignUp, onForgotPassword }: LoginPro
     try {
       const { error: signInError } = await signIn({ email, password });
       if (signInError) {
-        if (signInError.message.includes("Email not confirmed")) {
-          setError("Your email has not been confirmed yet. Please check your inbox for the verification link.");
-        } else if (signInError.message.includes("Invalid login credentials")) {
+        if (signInError.message.includes("Invalid login credentials")) {
           setError("Invalid email or password. Please try again.");
         } else {
           setError(signInError.message);

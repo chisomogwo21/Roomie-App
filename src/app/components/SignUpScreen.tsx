@@ -22,7 +22,6 @@ export function SignUpScreen({ onBack, onSignUp, onSignIn }: SignUpScreenProps) 
   }>({});
   const [loading, setLoading] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
-  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
@@ -81,12 +80,8 @@ export function SignUpScreen({ onBack, onSignUp, onSignIn }: SignUpScreenProps) 
             setGeneralError(signUpError.message);
           }
         } else {
-          // If session is null, email confirmation is required
-          if (signUpData && !signUpData.session) {
-            setShowConfirmationMessage(true);
-          } else {
-            onSignUp();
-          }
+          // If a session exists, the user is logged in automatically
+          onSignUp();
         }
       } catch (err) {
         setGeneralError("An unexpected error occurred. Please try again.");
@@ -312,29 +307,6 @@ export function SignUpScreen({ onBack, onSignUp, onSignIn }: SignUpScreenProps) 
             Sign in
           </button>
         </p>
-
-        {/* Confirmation Message Modal/Overlay */}
-        {showConfirmationMessage && (
-          <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center px-[24px] text-center">
-            <div className="bg-[#f4ebff] size-[80px] rounded-full flex items-center justify-center mb-[24px]">
-              <svg className="w-[40px] h-[40px] text-[#fe456a]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[24px] leading-[32px] text-[#1f2a37] mb-[8px]">
-              Check your email
-            </h2>
-            <p className="font-['Inter:Regular',sans-serif] font-normal text-[16px] leading-[24px] text-[#9da4ae] mb-[32px]">
-              We've sent a verification link to <span className="text-[#1f2a37] font-medium">{email}</span>. Please click the link to confirm your account.
-            </p>
-            <button
-              onClick={onSignIn}
-              className="bg-[#fe456a] w-full h-[52px] rounded-[8px] font-['Inter:Regular',sans-serif] font-normal text-[18px] text-white shadow-lg"
-            >
-              Back to Sign In
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Home Indicator */}
