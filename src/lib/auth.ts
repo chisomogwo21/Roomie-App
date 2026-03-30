@@ -18,7 +18,10 @@ export async function signUp({ email, password, options }: { email: string; pass
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options,
+    options: {
+      ...options,
+      emailRedirectTo: window.location.origin,
+    },
   });
   return { data, error };
 }

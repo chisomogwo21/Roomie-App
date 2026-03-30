@@ -62,7 +62,7 @@ export function SignUpScreen({ onBack, onSignUp, onSignIn }: SignUpScreenProps) 
       setLoading(true);
       setGeneralError(null);
       try {
-        const { error: signUpError } = await signUp({
+        const { data: signUpData, error: signUpError } = await signUp({
           email,
           password,
           options: {
@@ -73,10 +73,16 @@ export function SignUpScreen({ onBack, onSignUp, onSignIn }: SignUpScreenProps) 
         });
 
         if (signUpError) {
-          setGeneralError(signUpError.message);
+          if (signUpError.message.includes("User already registered")) {
+            setGeneralError("An account with this email already exists. Try logging in instead.");
+          } else if (signUpError.message.includes("Password should be at least")) {
+            setGeneralError("Password is too weak. Please use at least 6 characters.");
+          } else {
+            setGeneralError(signUpError.message);
+          }
         } else {
           // If session is null, email confirmation is required
-          if (!data.session) {
+          if (signUpData && !signUpData.session) {
             setShowConfirmationMessage(true);
           } else {
             onSignUp();
