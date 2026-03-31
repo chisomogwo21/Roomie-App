@@ -80,12 +80,9 @@ export function RoommateMatching({ onBack, onViewProfile, onStartChat }: Roommat
     setSwipedProfiles([...swipedProfiles, currentProfile.id]);
 
     if (direction === "right") {
-      // Simulate match (in real app, this would check if other user also swiped right)
-      const isMatch = Math.random() > 0.5; // 50% chance of match for demo
-      if (isMatch) {
-        setMatchedProfile(currentProfile);
-        return;
-      }
+      // For demonstration/testing: Always trigger a match on swipe right
+      setMatchedProfile(currentProfile);
+      return;
     }
 
     // Move to next profile
