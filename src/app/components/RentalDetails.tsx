@@ -13,7 +13,7 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
 
   // Demo data for entire home rental
   const demoListing: ListingData = {
-    intent: "tenant",
+    intent: "rental",
     livingSetup: "entire-apartment",
     existingRoommates: [],
     spaceDetails: {
@@ -33,6 +33,13 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
     deposit: "800",
     moveInDate: "2026-02-15",
     minimumStay: "12-months",
+    locationDetails: {
+      country: "Rwanda",
+      city: "Kigali",
+      area: "Downtown",
+      address: "123 Kigali St",
+      hideAddress: false,
+    },
     photos: [],
     description: "Beautiful entire apartment in a prime location. Modern finishes, natural light throughout, and close to all amenities. Perfect for individuals or couples looking for their own space.",
   };
@@ -372,7 +379,7 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
                 const { label, icon: Icon } = getFacilityInfo(facility.id);
                 return (
                   <div key={facility.id} className="px-[12px] py-[8px] bg-[#f9f5ff] rounded-[8px] flex items-center gap-[6px]">
-                    <Icon className="w-[16px] h-[16px]" fill="#fe456a" />
+                    <Icon className="w-[16px] h-[16px] text-[#fe456a]" />
                     <span className="font-['Inter:Medium',sans-serif] font-medium text-[12px] leading-[18px] text-[#1f2a37]">
                       {label}
                     </span>

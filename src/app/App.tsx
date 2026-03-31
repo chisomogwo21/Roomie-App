@@ -104,7 +104,7 @@ export default function App() {
   const [hasUnreadMessages] = useState(false);
   const [userName, setUserName] = useState("Guest");
   const [userEmail, setUserEmail] = useState("");
-  const [userFullName, setUserFullName] = useState("");
+  const [_userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
   const [hasCompletedPreferences, setHasCompletedPreferences] = useState(false);
   
@@ -486,8 +486,6 @@ export default function App() {
       <>
         <EditProfile 
           onBack={() => setShowEditProfile(false)} 
-          initialFullName={userFullName}
-          initialEmail={userEmail}
           userAvatar={userAvatar}
           onAvatarUpdate={(url) => setUserAvatar(url)}
         />

@@ -90,7 +90,7 @@ export function CommunityFeed({ onBack, onViewProfile }: CommunityFeedProps) {
     activeFilter === "All"
       ? posts
       : posts.filter((post) =>
-          post.tags.some((tag: string) => tag.includes(activeFilter))
+          post.tags?.some((tag: string) => tag.includes(activeFilter))
         );
 
   return (

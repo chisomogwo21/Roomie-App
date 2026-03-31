@@ -48,38 +48,8 @@ export function BookingRequest({
   const [introMessage, setIntroMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Demo data
-  const demoListing = {
-    title: "Cozy 2BR in Downtown Boston",
-    coverImage: undefined,
-    livingSetup: "2 bed · 1 bath · Shared living room",
-    city: "Boston",
-    neighborhood: "Back Bay",
-    price: "$1,200",
-    priceUnit: "/month per person",
-    moveInDate: "Available Feb 15, 2026",
-    roommates: listingType === "shared" ? [
-      {
-        id: "1",
-        name: "Alex Chen",
-        age: "27",
-        occupation: "Software Engineer",
-        lifestyleTags: ["Clean", "Quiet", "WFH"],
-        compatibilityScore: 92
-      },
-      {
-        id: "2",
-        name: "Jordan Lee",
-        age: "26",
-        occupation: "Graphic Designer",
-        lifestyleTags: ["Social", "Active", "Foodie"],
-        compatibilityScore: 88
-      }
-    ] : undefined
-  };
-
-  const listing = listingData || demoListing;
   const isShared = listingType === "shared";
+  const listing = listingData;
 
   // Check if form is valid
   const isFormValid = moveInDate && lengthOfStay && budgetConfirmed;
@@ -89,8 +59,8 @@ export function BookingRequest({
       setLoading(true);
       try {
         const { error } = await sendBookingRequest({
-          listingId: "demo-listing-id", // Hardcoded for demo, normally listing.id
-          recipientId: "demo-recipient-id", // Hardcoded for demo, normally listing owner id
+          listingId: (listing as any)?.id || "pending",
+          recipientId: (listing as any)?.user_id || "pending",
           moveInDate,
           lengthOfStay,
           budgetConfirmed,
@@ -137,7 +107,7 @@ export function BookingRequest({
         <div className="mx-[20px] mt-[20px] bg-white rounded-[16px] border border-[#e5e7eb] overflow-hidden">
           {/* Cover Image */}
           <div className="w-full h-[200px] bg-gray-200 relative">
-            {listing.coverImage ? (
+            {listing?.coverImage ? (
               <ImageWithFallback
                 src={listing.coverImage}
                 alt={listing.title}
@@ -153,30 +123,30 @@ export function BookingRequest({
           {/* Listing Info */}
           <div className="p-[20px]">
             <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[18px] leading-[24px] text-[#1f2a37] mb-[8px]">
-              {listing.title}
+              {listing?.title || "Loading..."}
             </h2>
             
             <div className="flex items-center gap-[8px] text-[14px] text-[#6b7280] mb-[12px]">
               <Home size={16} />
-              <span>{listing.livingSetup}</span>
+              <span>{listing?.livingSetup || "Entire Home"}</span>
             </div>
 
             <div className="flex items-center gap-[8px] text-[14px] text-[#6b7280] mb-[16px]">
               <MapPin size={16} />
-              <span>{listing.neighborhood}, {listing.city}</span>
+              <span>{listing?.neighborhood ? `${listing.neighborhood}, ` : ""}{listing?.city || "Select Location"}</span>
             </div>
 
             <div className="flex items-center justify-between pt-[16px] border-t border-[#e5e7eb]">
               <div>
                 <div className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[20px] leading-[28px] text-[#1f2a37]">
-                  {listing.price}
+                  {listing?.price || "$0"}
                 </div>
-                <div className="text-[12px] text-[#6b7280]">{listing.priceUnit}</div>
+                <div className="text-[12px] text-[#6b7280]">{listing?.priceUnit || "/month"}</div>
               </div>
               <div className="text-right">
                 <div className="flex items-center gap-[6px] text-[14px] text-[#6b7280]">
                   <Calendar size={16} />
-                  <span>{listing.moveInDate}</span>
+                  <span>{listing?.moveInDate || "Flexible"}</span>
                 </div>
               </div>
             </div>
@@ -184,7 +154,7 @@ export function BookingRequest({
         </div>
 
         {/* Roommate Context - Only for shared listings */}
-        {isShared && listing.roommates && listing.roommates.length > 0 && (
+        {isShared && listing?.roommates && listing.roommates.length > 0 && (
           <div className="mx-[20px] mt-[16px] bg-white rounded-[16px] border border-[#e5e7eb] p-[20px]">
             <div className="flex items-center gap-[8px] mb-[16px]">
               <Users size={20} className="text-[#FE456A]" />
@@ -294,7 +264,7 @@ export function BookingRequest({
                 />
                 <div className="flex-1">
                   <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px] leading-[20px] text-[#1f2a37]">
-                    I confirm my budget is {listing.price}{listing.priceUnit} <span className="text-[#FE456A]">*</span>
+                    I confirm my budget is {listing?.price || "$0"}{listing?.priceUnit || "/month"} <span className="text-[#FE456A]">*</span>
                   </span>
                   <p className="text-[13px] text-[#6b7280] mt-[4px]">
                     This helps ensure we're aligned on pricing expectations

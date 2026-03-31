@@ -70,7 +70,7 @@ export async function fetchMessages(otherUserId: string) {
 /**
  * Subscribe to new messages between the current user and another user.
  */
-export function subscribeToMessages(onMessageReceived: (message: DatabaseMessage) => void) {
+export function subscribeToMessages(_otherUserId: string, onMessageReceived: (message: DatabaseMessage) => void) {
   return supabase
     .channel('public:messages')
     .on(

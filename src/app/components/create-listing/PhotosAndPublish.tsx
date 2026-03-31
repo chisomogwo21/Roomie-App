@@ -43,7 +43,7 @@ export function PhotosAndPublish({ onPublish }: PhotosAndPublishProps) {
       updatePhotosAndDescription(photos, description);
       
       // 2. Call Supabase with the combined data
-      const { data, error } = await createProperty({
+      const { error } = await createProperty({
         ...listingData,
         photos, // Ensure actual files are sent
         description

@@ -39,3 +39,70 @@ export async function sendBookingRequest(requestData: BookingRequestData) {
 
   return { data: data ? data[0] : null, error };
 }
+
+/**
+ * Fetch a single request by ID with full details
+ */
+export async function fetchRequestById(requestId: string) {
+  const { data, error } = await supabase
+    .from('requests')
+    .select(`
+      *,
+      properties:listing_id (title, living_setup, city, neighborhood, price, images),
+      sender:sender_id (full_name, avatar_url, bio, occupation, date_of_birth, lifestyle_tags),
+      recipient:recipient_id (full_name, avatar_url, bio, occupation, date_of_birth, lifestyle_tags)
+    `)
+    .eq('id', requestId);
+  
+  return { data: data ? data[0] : null, error };
+}
+
+/**
+ * Fetch requests received by the current user
+ */
+export async function fetchReceivedRequests() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: new Error("Not authenticated") };
+
+  const { data, error } = await supabase
+    .from('requests')
+    .select(`
+      *,
+      properties:listing_id (title, living_setup, city, neighborhood, price),
+      profiles:sender_id (full_name, avatar_url, lifestyle_tags)
+    `)
+    .eq('recipient_id', user.id);
+  
+  return { data, error };
+}
+
+/**
+ * Fetch requests sent by the current user
+ */
+export async function fetchSentRequests() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: new Error("Not authenticated") };
+
+  const { data, error } = await supabase
+    .from('requests')
+    .select(`
+      *,
+      properties:listing_id (title, living_setup, city, neighborhood, price, image_url)
+    `)
+    .eq('sender_id', user.id);
+  
+  return { data, error };
+}
+
+/**
+ * Update request status (Accept/Decline)
+ */
+export async function updateRequestStatus(requestId: string, status: 'accepted' | 'declined') {
+  const { data, error } = await supabase
+    .from('requests')
+    .update({ status })
+    .eq('id', requestId)
+    .select();
+  
+  return { data, error };
+}

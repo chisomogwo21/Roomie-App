@@ -9,7 +9,7 @@ interface ExploreProps {
   onViewProfile?: () => void;
 }
 
-export function Explore({ onSelectCity, onViewListing, onViewProfile }: ExploreProps) {
+export function Explore({ onViewListing }: ExploreProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");

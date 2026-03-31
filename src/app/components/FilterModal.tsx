@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X, Hospital, ShoppingCart, Bus, GraduationCap, Dumbbell, Cross } from "lucide-react";
 
 interface FilterModalProps {

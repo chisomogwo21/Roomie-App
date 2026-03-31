@@ -16,29 +16,15 @@ export function RequestToJoin({ onBack, listing, requestStatus, onStartChat, onF
   const [lengthOfStay, setLengthOfStay] = useState<string>("long-term");
   const [message, setMessage] = useState("");
 
-  // Demo data for when no listing is provided
-  const demoListing: ListingData = {
-    intent: "rental", // Changed to "rental" to show landlord listing version
-    livingSetup: "entire-apartment",
-    existingRoommates: [], // No roommates for entire home rentals
-    spaceDetails: {
-      bedrooms: "2",
-      bathrooms: "1",
-      furnished: true,
-      privateBathroom: null,
-      utilitiesIncluded: false,
-    },
-    idealFor: ["working-professionals", "couples"],
-    nearbyFacilities: [],
-    rent: "1800",
-    deposit: "1800",
-    moveInDate: "2026-03-01",
-    minimumStay: "12-months",
-    photos: [],
-    description: "Modern 2-bedroom apartment in downtown area. Recently renovated with new appliances.",
-  };
+  if (!listing) {
+    return (
+      <div className="size-full flex items-center justify-center bg-white">
+        <p className="text-[16px] text-[#6b7280]">Loading listing details...</p>
+      </div>
+    );
+  }
 
-  const activeListingData = listing || demoListing;
+  const activeListingData = listing;
 
   // Helper functions
   const getLivingSetupLabel = () => {
@@ -138,7 +124,7 @@ export function RequestToJoin({ onBack, listing, requestStatus, onStartChat, onF
             <div className="w-[88px] h-[75px] bg-[#e5e7eb] rounded-[8px] flex-shrink-0 overflow-hidden">
               {activeListingData.photos && activeListingData.photos.length > 0 ? (
                 <img
-                  src={activeListingData.photos[0]}
+                  src={typeof activeListingData.photos[0] === 'string' ? activeListingData.photos[0] : ""}
                   alt="Property"
                   className="w-full h-full object-cover"
                 />

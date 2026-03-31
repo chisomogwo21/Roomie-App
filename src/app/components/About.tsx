@@ -1,4 +1,4 @@
-import { ArrowLeft, Heart, Users, Search, MessageCircle, Shield, ChevronRight } from "lucide-react";
+import { ArrowLeft, Heart, Users, Search, MessageCircle, ChevronRight } from "lucide-react";
 
 interface AboutProps {
   onBack: () => void;

@@ -1,5 +1,7 @@
-import { ArrowLeft, MapPin, Home, Calendar, Clock, Check, X, MessageCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, MapPin, Home, Calendar, Clock, Check, X, MessageCircle, Loader2 } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
+import { fetchRequestById } from "../../lib/requests";
 
 type RequestStatus = "pending" | "accepted" | "declined";
 
@@ -20,51 +22,46 @@ export function RequestDetail({
   onDecline,
   onStartChat,
 }: RequestDetailProps) {
-  // Demo data - in real app, this would be fetched based on requestId
-  const receivedRequestData = {
-    id: requestId,
-    status: "pending" as RequestStatus,
-    requesterPhoto: undefined,
-    requesterName: "Sarah Mitchell",
-    requesterAge: "27",
-    requesterOccupation: "Software Engineer",
-    requesterBio: "Clean, organized, and respectful of shared spaces. I work from home and enjoy cooking, reading, and yoga. Non-smoker, no pets.",
-    lifestyleTags: ["Clean", "Quiet", "WFH", "Early Bird"],
-    compatibilityScore: 92,
-    listingTitle: "2BR Apartment in Back Bay",
-    listingImage: undefined,
-    livingSetup: "Private Room · Shared Apartment",
-    city: "Boston",
-    neighborhood: "Back Bay",
-    price: "$1,200",
-    moveInDate: "March 1, 2026",
-    lengthOfStay: "6-12 months",
-    budgetConfirmed: true,
-    introMessage: "Hi! I'm a software engineer moving to Boston for work. I love cooking and exploring new cafes. I'm clean, quiet, and work from home most days. I'm looking for roommates who value a peaceful home environment but also enjoy occasional hangouts. I'd love to chat more about the space and get to know you better!",
-    timestamp: "2 hours ago",
-  };
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const sentRequestData = {
-    id: requestId,
-    status: "accepted" as RequestStatus,
-    listingTitle: "Cozy 3BR in Cambridge",
-    listingImage: undefined,
-    livingSetup: "Private Room · Shared House",
-    city: "Cambridge",
-    neighborhood: "Central Square",
-    price: "$1,350",
-    hostName: "Michael Torres",
-    hostPhoto: undefined,
-    hostAge: "29",
-    hostOccupation: "Product Designer",
-    compatibilityScore: 88,
-    moveInDate: "February 15, 2026",
-    lengthOfStay: "1 year or more",
-    dateSent: "January 17, 2026",
-  };
+  useEffect(() => {
+    async function loadRequest() {
+      setLoading(true);
+      try {
+        const { data: reqData, error } = await fetchRequestById(requestId);
+        if (error) throw error;
+        setData(reqData);
+      } catch (err) {
+        console.error("Error loading request:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRequest();
+  }, [requestId]);
 
-  const data = requestType === "received" ? receivedRequestData : sentRequestData;
   const isReceived = requestType === "received";
+
+  if (loading) {
+    return (
+      <div className="size-full flex items-center justify-center bg-white">
+        <Loader2 className="w-[40px] h-[40px] animate-spin text-[#fe456a]" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="size-full flex flex-col items-center justify-center p-[40px] bg-white">
+        <p className="text-[16px] text-[#6b7280] text-center mb-[20px]">Request not found</p>
+        <button onClick={onBack} className="text-[#fe456a] font-semibold">Go Back</button>
+      </div>
+    );
+  }
+
+  const profile = isReceived ? data.sender : data.recipient;
+  const property = data.properties;
 
   const getStatusBadge = (status: RequestStatus) => {
     const styles = {
@@ -108,7 +105,7 @@ export function RequestDetail({
           {getStatusBadge(data.status)}
           <div className="flex items-center gap-[4px] text-[13px] text-[#9da4ae]">
             <Clock size={14} />
-            <span>{isReceived ? receivedRequestData.timestamp : `Sent ${sentRequestData.dateSent}`}</span>
+            <span>{new Date(data.created_at).toLocaleDateString()}</span>
           </div>
         </div>
 
@@ -116,10 +113,10 @@ export function RequestDetail({
         <div className="mx-[20px] mt-[16px] bg-white rounded-[16px] border border-[#e5e7eb] overflow-hidden">
           {/* Cover Image */}
           <div className="w-full h-[180px] bg-gray-200 relative">
-            {data.listingImage ? (
+            {property?.images?.[0] ? (
               <ImageWithFallback
-                src={data.listingImage}
-                alt={data.listingTitle}
+                src={property.images[0]}
+                alt={property.title}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -132,22 +129,22 @@ export function RequestDetail({
           {/* Listing Info */}
           <div className="p-[16px]">
             <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[17px] leading-[22px] text-[#1f2a37] mb-[8px]">
-              {data.listingTitle}
+              {property?.title || "Property"}
             </h2>
             
             <div className="flex items-center gap-[8px] text-[14px] text-[#6b7280] mb-[8px]">
               <Home size={16} />
-              <span>{data.livingSetup}</span>
+              <span>{property?.living_setup || "Shared Apartment"}</span>
             </div>
 
             <div className="flex items-center gap-[8px] text-[14px] text-[#6b7280] mb-[12px]">
               <MapPin size={16} />
-              <span>{isReceived ? receivedRequestData.neighborhood : sentRequestData.neighborhood}, {data.city}</span>
+              <span>{property?.neighborhood || property?.city || "Location"}</span>
             </div>
 
             <div className="pt-[12px] border-t border-[#e5e7eb]">
               <div className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[18px] leading-[24px] text-[#1f2a37]">
-                {data.price}
+                ${property?.price || "0"}
               </div>
               <div className="text-[12px] text-[#6b7280]">/month per person</div>
             </div>
@@ -163,15 +160,15 @@ export function RequestDetail({
           <div className="flex items-start gap-[12px] mb-[16px]">
             {/* Profile Photo */}
             <div className="w-[64px] h-[64px] rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-              {(isReceived ? receivedRequestData.requesterPhoto : sentRequestData.hostPhoto) ? (
+              {profile?.avatar_url ? (
                 <ImageWithFallback
-                  src={(isReceived ? receivedRequestData.requesterPhoto : sentRequestData.hostPhoto)!}
-                  alt={isReceived ? receivedRequestData.requesterName : sentRequestData.hostName}
+                  src={profile.avatar_url}
+                  alt={profile.full_name}
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
                 <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[24px] text-gray-600">
-                  {(isReceived ? receivedRequestData.requesterName : sentRequestData.hostName).charAt(0)}
+                  {(profile?.full_name || "Roomie").charAt(0)}
                 </span>
               )}
             </div>
@@ -179,18 +176,18 @@ export function RequestDetail({
             {/* Info */}
             <div className="flex-1">
               <h4 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[17px] leading-[22px] text-[#1f2a37] mb-[4px]">
-                {isReceived ? receivedRequestData.requesterName : sentRequestData.hostName}
+                {profile?.full_name || "Roomie"}
               </h4>
               <p className="text-[14px] text-[#6b7280] mb-[4px]">
-                {isReceived ? receivedRequestData.requesterAge : sentRequestData.hostAge} · {isReceived ? receivedRequestData.requesterOccupation : sentRequestData.hostOccupation}
+                {profile?.occupation || "Professional"}
               </p>
             </div>
           </div>
 
-          {/* Lifestyle Tags - only for received requests */}
-          {isReceived && receivedRequestData.lifestyleTags && (
+          {/* Lifestyle Tags */}
+          {profile?.lifestyle_tags && (
             <div className="flex flex-wrap gap-[8px] mb-[16px]">
-              {receivedRequestData.lifestyleTags.map((tag) => (
+              {profile.lifestyle_tags.map((tag: any) => (
                 <span
                   key={tag}
                   className="px-[12px] py-[6px] bg-[#f3f4f6] text-[#4b5563] text-[13px] rounded-full"
@@ -201,12 +198,17 @@ export function RequestDetail({
             </div>
           )}
 
-          {/* Bio - only for received requests */}
-          {isReceived && receivedRequestData.requesterBio && (
+          {/* Bio */}
+          {profile?.bio && (
             <p className="text-[14px] text-[#6b7280] leading-[20px] mb-[16px]">
-              {receivedRequestData.requesterBio}
+              {profile.bio}
             </p>
           )}
+
+          {/* Compatibility Score */}
+          <div className="hidden">
+            {/* Kept hidden until matching algorithm supports precise scores for request views */}
+          </div>
 
           {/* Compatibility Score */}
           {data.compatibilityScore && (
@@ -257,7 +259,7 @@ export function RequestDetail({
             </div>
 
             {/* Budget Confirmed - only for received */}
-            {isReceived && receivedRequestData.budgetConfirmed && (
+            {isReceived && data.budget_confirmed && (
               <div className="flex items-center gap-[8px] px-[12px] py-[8px] bg-[#D1FAE5]/50 border border-[#A7F3D0] rounded-[8px]">
                 <Check size={16} className="text-[#065F46]" />
                 <span className="text-[13px] text-[#065F46]">Budget confirmed</span>
@@ -267,13 +269,13 @@ export function RequestDetail({
         </div>
 
         {/* Intro Message - only for received */}
-        {isReceived && receivedRequestData.introMessage && (
+        {isReceived && data.intro_message && (
           <div className="mx-[20px] mt-[16px] bg-white rounded-[16px] border border-[#e5e7eb] p-[20px]">
             <h3 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] text-[#1f2a37] mb-[12px]">
-              Message from {receivedRequestData.requesterName}
+              Message from {profile?.full_name || "Roomie"}
             </h3>
             <p className="text-[14px] text-[#6b7280] leading-[22px]">
-              "{receivedRequestData.introMessage}"
+              "{data.intro_message}"
             </p>
           </div>
         )}

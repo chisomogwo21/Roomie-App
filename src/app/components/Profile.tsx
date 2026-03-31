@@ -38,8 +38,8 @@ export function Profile({
   onSettings,
   onFavorite,
   onRecentViewed,
-  userName = "Dammy",
-  userEmail = "dammy@gmail.com",
+  userName,
+  userEmail,
   userAvatar
 }: ProfileProps) {
   const menuItems: MenuItem[] = [
@@ -47,7 +47,7 @@ export function Profile({
     { 
       icon: Users, 
       label: "Lifestyle Preferences", 
-      summary: "Quiet · Clean · WFH",
+      summary: "Your habits & personality",
       onClick: onEditLifestylePreferences 
     },
     { 

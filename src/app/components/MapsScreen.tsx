@@ -7,14 +7,16 @@ interface MapsScreenProps {
   onChooseLocation: () => void;
 }
 
-// Mock location data removed for production
-const MOCK_LOCATIONS: any[] = [];
+import { fetchProperties } from "../../lib/properties";
+
+// Mock location data removed for production - using live properties
 
 export function MapsScreen({ onBack, onChooseLocation }: MapsScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("Search or choose a location");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [filteredLocations, setFilteredLocations] = useState(MOCK_LOCATIONS);
+  const [filteredLocations, setFilteredLocations] = useState<any[]>([]);
+  const [allLocations, setAllLocations] = useState<any[]>([]);
   const [mapPosition, setMapPosition] = useState({ x: -301, y: -8 });
   const [mapZoom, setMapZoom] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
@@ -22,13 +24,40 @@ export function MapsScreen({ onBack, onChooseLocation }: MapsScreenProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Load real locations from properties
+  useEffect(() => {
+    async function loadLocations() {
+      try {
+        const { data } = await fetchProperties();
+        if (data) {
+          // Extract unique cities/areas
+          const locations = Array.from(new Set(data.map(p => p.city))).filter(Boolean).map((city, idx) => {
+            const firstMatch = data.find(p => p.city === city);
+            return {
+              id: `loc-${idx}`,
+              name: city,
+              city: city,
+              country: firstMatch?.country || "Rwanda",
+              coords: { x: -301 + (Math.random() * 100), y: -8 + (Math.random() * 100) }
+            };
+          });
+          setAllLocations(locations);
+          setFilteredLocations(locations);
+        }
+      } catch (err) {
+        console.error("Error loading map locations:", err);
+      }
+    }
+    loadLocations();
+  }, []);
+
   // Filter locations based on search query
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setFilteredLocations(MOCK_LOCATIONS);
+      setFilteredLocations(allLocations);
       setShowSuggestions(false);
     } else {
-      const filtered = MOCK_LOCATIONS.filter(location =>
+      const filtered = allLocations.filter(location =>
         location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         location.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
         location.country.toLowerCase().includes(searchQuery.toLowerCase())
@@ -36,7 +65,7 @@ export function MapsScreen({ onBack, onChooseLocation }: MapsScreenProps) {
       setFilteredLocations(filtered);
       setShowSuggestions(true);
     }
-  }, [searchQuery]);
+  }, [searchQuery, allLocations]);
 
   const animateMapToLocation = (targetX: number, targetY: number) => {
     setIsAnimating(true);
@@ -48,7 +77,7 @@ export function MapsScreen({ onBack, onChooseLocation }: MapsScreenProps) {
     }, 800);
   };
 
-  const handleLocationSelect = (location: typeof MOCK_LOCATIONS[0]) => {
+  const handleLocationSelect = (location: any) => {
     setSelectedLocation(location.name);
     setSearchQuery("");
     setShowSuggestions(false);
@@ -87,12 +116,12 @@ export function MapsScreen({ onBack, onChooseLocation }: MapsScreenProps) {
 
   const handleUseCurrentLocation = () => {
     // Simulate getting current location
-    if (MOCK_LOCATIONS.length === 0) {
+    if (allLocations.length === 0) {
       setSelectedLocation("Your current location");
       return;
     }
-    const randomIndex = Math.floor(Math.random() * MOCK_LOCATIONS.length);
-    const currentLoc = MOCK_LOCATIONS[randomIndex];
+    const randomIndex = Math.floor(Math.random() * allLocations.length);
+    const currentLoc = allLocations[randomIndex];
     setSelectedLocation(currentLoc.name);
     setSearchQuery("");
     setShowSuggestions(false);

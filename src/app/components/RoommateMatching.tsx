@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { MatchCard } from "./MatchCard";
 import { MatchConfirmation } from "./MatchConfirmation";
-import { MOCK_PROFILES as SHARED_MOCK_PROFILES } from "../../lib/mockData";
+import { getMatches } from "../../lib/matching";
 
 interface RoommateProfile {
   id: string;
@@ -18,22 +18,6 @@ interface RoommateProfile {
   bio: string;
 }
 
-// Mock data re-added for testing profile access and info button
-const MOCK_PROFILES: RoommateProfile[] = SHARED_MOCK_PROFILES.filter(p => ["1", "2", "3"].includes(p.id))
-  .map(p => ({
-    id: p.id,
-    firstName: p.name,
-    age: p.age,
-    occupation: p.occupation,
-    location: p.location,
-    photoUrl: p.photoUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&h=1000&fit=crop",
-    compatibilityScore: p.compatibilityScore || 0,
-    lifestyleTags: p.lifestyleTags,
-    matchingTags: p.lifestyleTags.slice(0, 3), // Simple mapping for demo
-    bio: p.bio,
-    livingSetup: p.lookingFor || "Looking for a Roommate"
-  }));
-
 interface RoommateMatchingProps {
   onBack: () => void;
   onViewProfile?: (userId: string) => void;
@@ -42,11 +26,44 @@ interface RoommateMatchingProps {
 
 export function RoommateMatching({ onBack, onViewProfile, onStartChat }: RoommateMatchingProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [swipedProfiles, setSwipedProfiles] = useState<string[]>([]);
   const [matchedProfile, setMatchedProfile] = useState<RoommateProfile | null>(null);
+  const [profiles, setProfiles] = useState<RoommateProfile[]>([]);
+  const [swipedProfiles, setSwipedProfiles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const currentProfile = MOCK_PROFILES[currentIndex];
-  const hasMoreProfiles = currentIndex < MOCK_PROFILES.length;
+  useEffect(() => {
+    async function loadProfiles() {
+      setLoading(true);
+      try {
+        const matches = await getMatches();
+        // filter for roommates
+        const roommates = matches.filter(m => m.type === 'roommate');
+        if (roommates) {
+          setProfiles(roommates.map((p: any) => ({
+            id: p.id,
+            firstName: p.name || "Roomie",
+            age: p.age || "20s",
+            occupation: p.occupation || "Professional",
+            livingSetup: p.living_setup || "Looking for a Roommate",
+            location: p.location || "Rwanda",
+            compatibilityScore: p.matchScore || 0,
+            lifestyleTags: p.lifestyle_tags || [],
+            matchingTags: p.lifestyle_tags?.slice(0, 3) || [],
+            bio: p.bio || "",
+            photoUrl: p.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&h=1000&fit=crop"
+          })));
+        }
+      } catch (err) {
+        console.error("Error loading profiles:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProfiles();
+  }, []);
+
+  const currentProfile = profiles[currentIndex];
+  const hasMoreProfiles = currentIndex < profiles.length;
 
   const handleSwipe = (direction: "left" | "right") => {
     if (!currentProfile) return;
@@ -108,14 +125,18 @@ export function RoommateMatching({ onBack, onViewProfile, onStartChat }: Roommat
         <div className="flex items-center gap-[4px] px-[8px] py-[4px] bg-[#fef3f5] rounded-[12px]">
           <Sparkles className="w-[14px] h-[14px] text-[#fe456a]" />
           <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[11px] leading-[14px] text-[#fe456a]">
-            {MOCK_PROFILES.length - currentIndex}
+            {profiles.length - currentIndex}
           </span>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-hidden relative">
-        {hasMoreProfiles && currentProfile ? (
+        {loading ? (
+          <div className="size-full flex items-center justify-center">
+            <Loader2 className="w-[40px] h-[40px] animate-spin text-[#fe456a]" />
+          </div>
+        ) : hasMoreProfiles && currentProfile ? (
           <MatchCard
             profile={currentProfile}
             onSwipeLeft={() => handleSwipe("left")}

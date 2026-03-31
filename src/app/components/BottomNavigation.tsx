@@ -1,4 +1,4 @@
-import { Home, Compass, Heart, FileText, User, Users } from "lucide-react";
+import { Home, Compass, FileText, User, Users } from "lucide-react";
 
 interface BottomNavigationProps {
   activeTab: string;

@@ -1,0 +1,26 @@
+﻿src/app/components/Profile.tsx(47,12): error TS1005: ',' expected.
+src/app/components/Profile.tsx(48,14): error TS1005: ',' expected.
+src/app/components/Profile.tsx(49,14): error TS1005: ',' expected.
+src/app/components/Profile.tsx(50,5): error TS1005: ',' expected.
+src/app/components/Profile.tsx(50,6): error TS1128: Declaration or statement expected.
+src/app/components/Profile.tsx(53,12): error TS1005: ';' expected.
+src/app/components/Profile.tsx(54,14): error TS1005: ';' expected.
+src/app/components/Profile.tsx(55,14): error TS1005: ';' expected.
+src/app/components/Profile.tsx(56,6): error TS1128: Declaration or statement expected.
+src/app/components/Profile.tsx(57,25): error TS1005: ';' expected.
+src/app/components/Profile.tsx(57,46): error TS1005: ';' expected.
+src/app/components/Profile.tsx(57,74): error TS1128: Declaration or statement expected.
+src/app/components/Profile.tsx(58,33): error TS1005: ';' expected.
+src/app/components/Profile.tsx(58,61): error TS1005: ';' expected.
+src/app/components/Profile.tsx(58,96): error TS1128: Declaration or statement expected.
+src/app/components/Profile.tsx(59,25): error TS1005: ';' expected.
+src/app/components/Profile.tsx(59,51): error TS1005: ';' expected.
+src/app/components/Profile.tsx(59,83): error TS1128: Declaration or statement expected.
+src/app/components/Profile.tsx(60,24): error TS1005: ';' expected.
+src/app/components/Profile.tsx(60,42): error TS1005: ';' expected.
+src/app/components/Profile.tsx(60,67): error TS1128: Declaration or statement expected.
+src/app/components/Profile.tsx(61,26): error TS1005: ';' expected.
+src/app/components/Profile.tsx(61,47): error TS1005: ';' expected.
+src/app/components/Profile.tsx(61,74): error TS1128: Declaration or statement expected.
+src/app/components/Profile.tsx(62,3): error TS1128: Declaration or statement expected.
+src/app/components/Profile.tsx(208,1): error TS1128: Declaration or statement expected.

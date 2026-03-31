@@ -1,0 +1,4 @@
+﻿src/app/App.tsx(107,10): error TS6133: 'userFullName' is declared but its value is never read.
+src/app/components/BottomNavigation.tsx(1,25): error TS6133: 'Heart' is declared but its value is never read.
+src/app/components/ChatThread.tsx(69,59): error TS2554: Expected 1 arguments, but got 2.
+src/app/components/Community.tsx(6,57): error TS6133: 'DatabasePost' is declared but its value is never read.

@@ -7,7 +7,7 @@ interface VerifyEmailProps {
 }
 
 export function VerifyEmail({ onBack, onVerify }: VerifyEmailProps) {
-  const [code, setCode] = useState(["5", "4", "8", "4"]);
+  const [code, _setCode] = useState(["5", "4", "8", "4"]);
 
   const handleVerify = () => {
     onVerify(code.join(""));

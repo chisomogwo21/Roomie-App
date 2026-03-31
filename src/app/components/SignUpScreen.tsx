@@ -61,7 +61,7 @@ export function SignUpScreen({ onBack, onSignUp, onSignIn }: SignUpScreenProps) 
       setLoading(true);
       setGeneralError(null);
       try {
-        const { data: signUpData, error: signUpError } = await signUp({
+        const { error: signUpError } = await signUp({
           email,
           password,
           options: {

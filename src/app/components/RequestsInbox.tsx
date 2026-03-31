@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { ArrowLeft, Clock, Check, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Clock, Check, X, Loader2 } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
+import { fetchReceivedRequests, fetchSentRequests, updateRequestStatus } from "../../lib/requests";
+import { toast } from "sonner";
 
 type RequestStatus = "pending" | "accepted" | "declined";
 
@@ -48,90 +50,55 @@ export function RequestsInbox({
   onDeclineRequest,
 }: RequestsInboxProps) {
   const [activeTab, setActiveTab] = useState<"received" | "sent">("received");
+  const [receivedRequests, setReceivedRequests] = useState<ReceivedRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<SentRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Demo data for received requests
-  const receivedRequests: ReceivedRequest[] = [
-    {
-      id: "r1",
-      requesterPhoto: undefined,
-      requesterName: "Sarah Mitchell",
-      listingName: "2BR Apartment in Back Bay",
-      livingSetup: "Private Room · Shared Apartment",
-      compatibilityScore: 92,
-      status: "pending",
-      messagePreview: "Hi! I'm a software engineer moving to Boston for work. I love cooking and...",
-      timestamp: "2h ago",
-      moveInDate: "March 1, 2026",
-      lengthOfStay: "6-12 months",
-      fullMessage: "Hi! I'm a software engineer moving to Boston for work. I love cooking and exploring new cafes. I'm clean, quiet, and work from home most days. Would love to chat more about the space!",
-    },
-    {
-      id: "r2",
-      requesterPhoto: undefined,
-      requesterName: "Alex Chen",
-      listingName: "2BR Apartment in Back Bay",
-      livingSetup: "Private Room · Shared Apartment",
-      compatibilityScore: 88,
-      status: "accepted",
-      messagePreview: "Hello! Looking for a place starting next month. I'm a graphic designer and...",
-      timestamp: "1d ago",
-      moveInDate: "February 20, 2026",
-      lengthOfStay: "1 year or more",
-      fullMessage: "Hello! Looking for a place starting next month. I'm a graphic designer and enjoy a quiet lifestyle. I'm responsible and respectful of shared spaces.",
-    },
-    {
-      id: "r3",
-      requesterPhoto: undefined,
-      requesterName: "Jordan Lee",
-      listingName: "2BR Apartment in Back Bay",
-      livingSetup: "Private Room · Shared Apartment",
-      status: "declined",
-      messagePreview: "Hey there! I'm interested in the room...",
-      timestamp: "3d ago",
-      moveInDate: "February 15, 2026",
-      lengthOfStay: "3-6 months",
-    },
-  ];
+  useEffect(() => {
+    async function loadRequests() {
+      setLoading(true);
+      try {
+        const { data: recData } = await fetchReceivedRequests();
+        const { data: sentData } = await fetchSentRequests();
 
-  // Demo data for sent requests
-  const sentRequests: SentRequest[] = [
-    {
-      id: "s1",
-      listingImage: undefined,
-      listingTitle: "Modern Studio in Downtown",
-      city: "Boston",
-      livingSetup: "Entire Apartment",
-      status: "pending",
-      dateSent: "Jan 18, 2026",
-      moveInDate: "March 1, 2026",
-      lengthOfStay: "6-12 months",
-      hostName: "Emily Davis",
-    },
-    {
-      id: "s2",
-      listingImage: undefined,
-      listingTitle: "Cozy 3BR in Cambridge",
-      city: "Cambridge",
-      livingSetup: "Private Room · Shared House",
-      status: "accepted",
-      dateSent: "Jan 17, 2026",
-      moveInDate: "February 15, 2026",
-      lengthOfStay: "1 year or more",
-      hostName: "Michael Torres",
-    },
-    {
-      id: "s3",
-      listingImage: undefined,
-      listingTitle: "Spacious 2BR Near MIT",
-      city: "Cambridge",
-      livingSetup: "Private Room · Shared Apartment",
-      status: "declined",
-      dateSent: "Jan 15, 2026",
-      moveInDate: "March 1, 2026",
-      lengthOfStay: "6-12 months",
-      hostName: "Rachel Kim",
-    },
-  ];
+        if (recData) {
+          setReceivedRequests(recData.map((r: any) => ({
+            id: r.id,
+            requesterName: r.profiles?.full_name || "Roomie",
+            requesterPhoto: r.profiles?.avatar_url,
+            listingName: r.properties?.title || "Property",
+            livingSetup: r.properties?.living_setup || "Shared Space",
+            compatibilityScore: 85, // Fallback for demo
+            status: r.status,
+            messagePreview: r.intro_message,
+            timestamp: new Date(r.created_at).toLocaleDateString(),
+            moveInDate: r.move_in_date,
+            lengthOfStay: r.length_of_stay,
+            fullMessage: r.intro_message
+          })));
+        }
+
+        if (sentData) {
+          setSentRequests(sentData.map((r: any) => ({
+            id: r.id,
+            listingTitle: r.properties?.title || "Property",
+            listingImage: r.properties?.image_url,
+            city: r.properties?.city || "Kigali",
+            livingSetup: r.properties?.living_setup || "Shared Space",
+            status: r.status,
+            dateSent: new Date(r.created_at).toLocaleDateString(),
+            moveInDate: r.move_in_date,
+            lengthOfStay: r.length_of_stay,
+          })));
+        }
+      } catch (err) {
+        console.error("Error loading requests:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRequests();
+  }, [activeTab]);
 
   const getStatusBadge = (status: RequestStatus) => {
     const styles = {
@@ -153,14 +120,28 @@ export function RequestsInbox({
     );
   };
 
-  const handleAccept = (e: React.MouseEvent, requestId: string) => {
+  const handleAccept = async (e: React.MouseEvent, requestId: string) => {
     e.stopPropagation();
-    onAcceptRequest?.(requestId);
+    try {
+      const { error } = await updateRequestStatus(requestId, "accepted");
+      if (error) throw error;
+      toast.success("Request accepted!");
+      onAcceptRequest?.(requestId);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to accept request");
+    }
   };
 
-  const handleDecline = (e: React.MouseEvent, requestId: string) => {
+  const handleDecline = async (e: React.MouseEvent, requestId: string) => {
     e.stopPropagation();
-    onDeclineRequest?.(requestId);
+    try {
+      const { error } = await updateRequestStatus(requestId, "declined");
+      if (error) throw error;
+      toast.success("Request declined");
+      onDeclineRequest?.(requestId);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to decline request");
+    }
   };
 
   return (
@@ -210,7 +191,11 @@ export function RequestsInbox({
 
       {/* Content */}
       <div className="flex-1 pb-[24px]">
-        {activeTab === "received" ? (
+        {loading ? (
+          <div className="flex justify-center py-[100px]">
+            <Loader2 className="animate-spin text-[#FE456A] w-[40px] h-[40px]" />
+          </div>
+        ) : activeTab === "received" ? (
           receivedRequests.length > 0 ? (
             <div className="px-[20px] pt-[20px] space-y-[12px]">
               {receivedRequests.map((request) => (

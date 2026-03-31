@@ -1,8 +1,12 @@
-import { useState } from "react";
-import { Plus, MessageCircle, Bell, Users, Home, Key, Heart, ArrowRight } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, MessageCircle, Bell, Users, Home, Key, Heart, ArrowRight, Loader2 } from "lucide-react";
 import { PostCard } from "./PostCard";
 import { CreatePostModal } from "./CreatePostModal";
 import { EmptyState } from "./EmptyState";
+import { fetchPosts, createPost, subscribeToPosts } from "../../lib/posts";
+import { getMatches } from "../../lib/matching";
+import { fetchProperties } from "../../lib/properties";
+import { toast } from "sonner";
 
 const FILTER_CATEGORIES = [
   "All",
@@ -12,8 +16,6 @@ const FILTER_CATEGORIES = [
   "Tips & Advice",
 ];
 
-// Mock data for posts removed for production
-const MOCK_POSTS: any[] = [];
 
 interface CommunityProps {
   onOpenMessages?: () => void;
@@ -28,43 +30,122 @@ interface CommunityProps {
 export function Community({ 
   onOpenMessages, 
   onOpenNotifications,
-  hasUnreadNotifications = true,
-  hasUnreadMessages = true,
+  hasUnreadNotifications = false,
+  hasUnreadMessages = false,
   onStartMatching,
   onBrowseHomes,
   onCreateListing,
 }: CommunityProps = {}) {
   const [activeFilter, setActiveFilter] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [posts, setPosts] = useState(MOCK_POSTS);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [recommendedProfiles, setRecommendedProfiles] = useState<any[]>([]);
+  const [recommendedHomes, setRecommendedHomes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCreatePost = (newPost: {
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [postsRes, matchesRes, propertiesRes] = await Promise.all([
+        fetchPosts(),
+        getMatches(),
+        fetchProperties()
+      ]);
+
+      if (postsRes.data) {
+        setPosts(postsRes.data.map(p => ({
+          id: p.id,
+          userName: p.profiles?.full_name || "Roomie",
+          userAvatar: p.profiles?.avatar_url || undefined,
+          location: p.location || "Earth",
+          timestamp: new Date(p.created_at).toLocaleDateString(),
+          text: p.text,
+          tags: p.tags || [],
+          matchScore: null
+        })));
+      }
+
+      if (matchesRes) {
+        setRecommendedProfiles(matchesRes.slice(0, 5).map(m => ({
+          id: m.id,
+          name: m.name,
+          initial: m.name.charAt(0),
+          compatibility: m.matchScore,
+          setup: m.bio || "Professional"
+        })));
+      }
+
+      if (propertiesRes.data) {
+        setRecommendedHomes(propertiesRes.data.slice(0, 5).map(p => ({
+          id: p.id,
+          title: p.title,
+          price: `$${p.price}`,
+          location: p.location,
+          image: p.image_url || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400"
+        })));
+      }
+    } catch (err) {
+      console.error("Error loading community data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+
+    // Subscribe to new posts
+    const subscription = subscribeToPosts((newPost) => {
+      setPosts(prev => [{
+        id: newPost.id,
+        userName: newPost.profiles?.full_name || "Roomie",
+        userAvatar: newPost.profiles?.avatar_url || undefined,
+        location: newPost.location || "Earth",
+        timestamp: "Just now",
+        text: newPost.text,
+        tags: newPost.tags || [],
+        matchScore: null
+      }, ...prev]);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [loadData]);
+
+  const handleCreatePost = async (newPost: {
     text: string;
     category: string;
     location: string;
     budget: string;
   }) => {
-    const post = {
-      id: Date.now().toString(),
-      userName: "You",
-      userAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-      location: newPost.location,
-      timestamp: "Just now",
-      text: newPost.text,
-      tags: [
+    try {
+      const tags = [
         newPost.category !== "All" ? newPost.category : "",
         newPost.budget ? `Budget ${newPost.budget}` : "",
-      ].filter(Boolean),
-      matchScore: null as const,
-    };
-    setPosts([post, ...posts]);
+      ].filter(Boolean);
+
+      const { error } = await createPost({
+        text: newPost.text,
+        category: newPost.category,
+        location: newPost.location,
+        budget: newPost.budget,
+        tags
+      });
+
+      if (error) throw error;
+      toast.success("Post created successfully!");
+      setIsModalOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create post");
+    }
   };
 
   const filteredPosts =
     activeFilter === "All"
       ? posts
       : posts.filter((post) =>
-          post.tags.some((tag) => tag.includes(activeFilter))
+          post.tags.some((tag: string) => tag.includes(activeFilter))
         );
 
   // Activity stats initialized to zero for production
@@ -72,10 +153,6 @@ export function Community({
   const activeRequests = 0;
   const newMatches = 0;
   const unreadMessageCount = 0;
-
-  // Empty states for production
-  const recommendedProfiles: any[] = [];
-  const recommendedHomes: any[] = [];
 
   return (
     <div className="min-h-screen bg-[#fafafa] pb-20">
@@ -349,7 +426,12 @@ export function Community({
 
       {/* Feed */}
       <div className="px-6 py-4">
-        {filteredPosts.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center p-[40px]">
+            <Loader2 className="w-[40px] h-[40px] animate-spin text-[#fe456a]" />
+            <p className="mt-[16px] text-[14px] text-[#9da4ae]">Loading community feed...</p>
+          </div>
+        ) : filteredPosts.length === 0 ? (
           <EmptyState onCreatePost={() => setIsModalOpen(true)} />
         ) : (
           <div className="flex flex-col gap-4 max-w-[600px] mx-auto">

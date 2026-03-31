@@ -5,11 +5,6 @@ import {
   Volume2,
   Moon,
   Briefcase,
-  Users,
-  Dog,
-  Cigarette,
-  ShoppingCart,
-  ChefHat,
   ArrowLeft,
 } from "lucide-react";
 

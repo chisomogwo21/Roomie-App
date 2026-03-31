@@ -29,14 +29,14 @@ export function Messages({ onBack, onOpenChat }: MessagesProps) {
   useEffect(() => {
     async function loadConversations() {
       setLoading(true);
-      const { data, error } = await fetchRecentConversations();
-      if (!error && data) {
+      const data = await fetchRecentConversations();
+      if (data) {
         const formatted = data.map(conv => ({
-          id: conv.other_user_id,
-          name: conv.other_user_name,
+          id: conv.id,
+          name: conv.full_name,
           message: conv.last_message,
           timestamp: new Date(conv.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          avatar: conv.other_user_avatar || imgEllipse17
+          avatar: conv.avatar_url || imgEllipse17
         }));
         setMessages(formatted);
       }
