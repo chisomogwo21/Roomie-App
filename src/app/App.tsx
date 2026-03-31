@@ -638,27 +638,6 @@ export default function App() {
     );
   }
 
-  // If preferences editor is active, show it
-  if (showPreferencesEditor) {
-    return <LifestylePreferencesFigma onBack={() => setShowPreferencesEditor(false)} onComplete={() => setShowPreferencesEditor(false)} />;
-  }
-
-  // If matching is active, show it
-  if (showMatching) {
-    return (
-      <RoommateMatching 
-        onBack={() => setShowMatching(false)} 
-        onViewProfile={handleViewProfile} 
-        onStartChat={(userId) => {
-          setShowMatching(false);
-          setCurrentChatStatus("accepted");
-          setCurrentChatRecipientId(userId);
-          setShowChatThread(true);
-        }}
-      />
-    );
-  }
-
   // If public profile is active, show it
   if (showPublicProfile) {
     // For demo purposes: if the user is in the matching pool (1, 2, or 3), show as 'matched'
@@ -686,6 +665,29 @@ export default function App() {
       />
     );
   }
+
+  // If preferences editor is active, show it
+  if (showPreferencesEditor) {
+    return <LifestylePreferencesFigma onBack={() => setShowPreferencesEditor(false)} onComplete={() => setShowPreferencesEditor(false)} />;
+  }
+
+  // If matching is active, show it
+  if (showMatching) {
+    return (
+      <RoommateMatching 
+        onBack={() => setShowMatching(false)} 
+        onViewProfile={handleViewProfile} 
+        onStartChat={(userId) => {
+          setShowMatching(false);
+          setCurrentChatStatus("accepted");
+          setCurrentChatRecipientId(userId);
+          setShowChatThread(true);
+        }}
+      />
+    );
+  }
+
+
 
   // If rental details is active, show it
   if (showRentalDetails) {
