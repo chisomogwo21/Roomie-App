@@ -17,63 +17,8 @@ export function CityListings({ cityName, onBack, onViewListing }: CityListingsPr
     setIsFilterOpen(false);
   };
 
-  // Mock listings data
-  const listings = [
-    {
-      id: "1",
-      image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&h=400&fit=crop",
-      setup: "Private Room · Shared Apartment",
-      price: 120,
-      neighborhood: "Kicukiro District",
-      availability: "Available Feb 1",
-      badges: ["2 roommates"],
-    },
-    {
-      id: "2",
-      image: "https://images.unsplash.com/photo-1502672260066-6bc35f0aafd6?w=600&h=400&fit=crop",
-      setup: "Studio",
-      price: 180,
-      neighborhood: "City Center",
-      availability: "Flexible",
-      badges: ["Entire home"],
-    },
-    {
-      id: "3",
-      image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600&h=400&fit=crop",
-      setup: "Private Room · Shared Apartment",
-      price: 100,
-      neighborhood: "Gasabo District",
-      availability: "Available now",
-      badges: ["3 roommates"],
-    },
-    {
-      id: "4",
-      image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&h=400&fit=crop",
-      setup: "Private Room · Shared Apartment",
-      price: 95,
-      neighborhood: "Nyarugenge",
-      availability: "Available Mar 1",
-      badges: ["2 roommates"],
-    },
-    {
-      id: "5",
-      image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&h=400&fit=crop",
-      setup: "2 BR Apartment",
-      price: 150,
-      neighborhood: "Kicukiro District",
-      availability: "Flexible",
-      badges: ["Entire home"],
-    },
-    {
-      id: "6",
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&h=400&fit=crop",
-      setup: "Private Room · Shared Apartment",
-      price: 110,
-      neighborhood: "Gasabo District",
-      availability: "Available Feb 15",
-      badges: ["1 roommate"],
-    },
-  ];
+  // Mock listings data removed for production
+  const listings: any[] = [];
 
   return (
     <>
@@ -115,7 +60,7 @@ export function CityListings({ cityName, onBack, onViewListing }: CityListingsPr
         <div className="flex-1 overflow-auto pb-[24px]">
           <div className="px-[24px] py-[20px]">
             <div className="flex flex-col gap-[16px]">
-              {listings.map((listing) => (
+              {listings.map((listing: any) => (
                 <button
                   key={listing.id}
                   onClick={() => onViewListing(listing.badges.includes("Entire home") ? "entire" : "shared")}
@@ -130,7 +75,7 @@ export function CityListings({ cityName, onBack, onViewListing }: CityListingsPr
                     />
                     {/* Badges overlay */}
                     <div className="absolute top-[12px] left-[12px] flex gap-[8px]">
-                      {listing.badges.map((badge, idx) => (
+                      {listing.badges.map((badge: string, idx: number) => (
                         <div
                           key={idx}
                           className="px-[10px] py-[6px] bg-white/95 backdrop-blur-sm rounded-[8px] flex items-center gap-[6px]"

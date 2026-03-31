@@ -1,18 +1,7 @@
 import { ArrowLeft, Search, Plus, MoreHorizontal, Trash2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import svgPaths from "../../imports/svg-zmljldicqn";
 import svgPathsDelete from "../../imports/svg-t7iwy2crtn";
-import imgEllipse25 from "../../assets/placeholders/avatar.png";
-import imgEllipse26 from "../../assets/placeholders/avatar.png";
-import imgEllipse27 from "../../assets/placeholders/avatar.png";
-import imgEllipse28 from "../../assets/placeholders/avatar.png";
-import imgEllipse29 from "../../assets/placeholders/avatar.png";
 import imgEllipse17 from "../../assets/placeholders/avatar.png";
-import imgEllipse18 from "../../assets/placeholders/avatar.png";
-import imgEllipse19 from "../../assets/placeholders/avatar.png";
-import imgEllipse20 from "../../assets/placeholders/avatar.png";
-import imgEllipse21 from "../../assets/placeholders/avatar.png";
-import imgEllipse22 from "../../assets/placeholders/avatar.png";
 import type { RequestStatus } from "./RequestStatusBadge";
 
 interface Message {
@@ -32,59 +21,11 @@ export function Messages({ onBack, onOpenChat }: MessagesProps) {
   const [swipedMessageId, setSwipedMessageId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      name: "Anggela",
-      message: "Thank you for information",
-      timestamp: "1:22 AM",
-      avatar: imgEllipse17,
-    },
-    {
-      id: "2",
-      name: "Theresa Webb",
-      message: "Hi there, the price is negotiable",
-      timestamp: "8:22 PM",
-      avatar: imgEllipse18,
-    },
-    {
-      id: "3",
-      name: "Guy Hawkins",
-      message: "Have a plan for discuss this ?",
-      timestamp: "8:22 PM",
-      avatar: imgEllipse19,
-    },
-    {
-      id: "4",
-      name: "Savannah Nguyen",
-      message: "Have a plan for discuss this ?",
-      timestamp: "8:22 PM",
-      avatar: imgEllipse20,
-    },
-    {
-      id: "5",
-      name: "Arlene McCoy",
-      message: "Have a plan for discuss this ?",
-      timestamp: "8:22 PM",
-      avatar: imgEllipse21,
-    },
-    {
-      id: "6",
-      name: "Leslie Alexander",
-      message: "Have a plan for discuss this ?",
-      timestamp: "8:22 PM",
-      avatar: imgEllipse22,
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   // Demo active chat avatars
-  const activeChats = [
-    imgEllipse25,
-    imgEllipse26,
-    imgEllipse27,
-    imgEllipse28,
-    imgEllipse29,
-  ];
+  // Demo active chat avatars removed for production
+  const activeChats: string[] = [];
 
   const handleDeleteClick = (messageId: string) => {
     setMessageToDelete(messageId);

@@ -19,66 +19,8 @@ interface NotificationsProps {
 }
 
 export function Notifications({ onBack, onNotificationClick }: NotificationsProps) {
-  // Demo notifications data
-  const notifications: Notification[] = [
-    {
-      id: "1",
-      type: "new_request",
-      userName: "Maria L.",
-      userInitial: "M",
-      message: "sent you a request to join your listing",
-      timestamp: "2 minutes ago",
-      read: false,
-      propertyTitle: "Sunny 2BR in Kigali Heights",
-    },
-    {
-      id: "2",
-      type: "request_accepted",
-      userName: "Sarah K.",
-      userInitial: "S",
-      message: "accepted your request",
-      timestamp: "5 minutes ago",
-      read: false,
-      requestStatus: "accepted",
-      propertyTitle: "Sunny 2BR in Kigali Heights",
-    },
-    {
-      id: "3",
-      type: "new_message",
-      userName: "Alex M.",
-      userInitial: "A",
-      message: "sent you a message",
-      timestamp: "1 hour ago",
-      read: false,
-    },
-    {
-      id: "4",
-      type: "request_declined",
-      userName: "Jordan P.",
-      userInitial: "J",
-      message: "declined your request",
-      timestamp: "3 hours ago",
-      read: true,
-      requestStatus: "declined",
-      propertyTitle: "Modern Studio near City Center",
-    },
-    {
-      id: "5",
-      type: "new_match",
-      userName: "Emma R.",
-      userInitial: "E",
-      message: "is a 92% match with you",
-      timestamp: "Yesterday",
-      read: true,
-    },
-    {
-      id: "6",
-      type: "system",
-      message: "Complete your profile to get better roommate matches",
-      timestamp: "2 days ago",
-      read: true,
-    },
-  ];
+  // Demo notifications data removed for production
+  const notifications: Notification[] = [];
 
   const getNotificationIcon = (type: Notification["type"]) => {
     switch (type) {

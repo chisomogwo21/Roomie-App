@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Heart, ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { MatchCard } from "./MatchCard";
 import { MatchConfirmation } from "./MatchConfirmation";
 
@@ -17,61 +17,8 @@ interface RoommateProfile {
   bio: string;
 }
 
-// Mock data for demo
-const MOCK_PROFILES: RoommateProfile[] = [
-  {
-    id: "1",
-    photoUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=600&fit=crop",
-    firstName: "Sarah",
-    age: "25-30",
-    occupation: "Marketing Professional",
-    livingSetup: "Private Room (Shared Apartment)",
-    location: "Downtown, 2.5 km away",
-    compatibilityScore: 87,
-    lifestyleTags: ["Clean", "Quiet", "WFH-friendly", "Early bird", "Non-smoker"],
-    matchingTags: ["Clean", "Quiet", "WFH-friendly"],
-    bio: "I work from home most days and value a clean, peaceful living space. Looking for someone who shares similar values!",
-  },
-  {
-    id: "2",
-    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop",
-    firstName: "Alex",
-    age: "22-27",
-    occupation: "Software Developer",
-    livingSetup: "Entire Home (Split Rent)",
-    location: "Midtown, 3.8 km away",
-    compatibilityScore: 92,
-    lifestyleTags: ["Clean", "Social", "WFH-friendly", "Night owl", "Non-smoker"],
-    matchingTags: ["Clean", "Social", "WFH-friendly"],
-    bio: "Software dev looking for a chill roommate. I enjoy hosting small get-togethers on weekends but keep it quiet during the week.",
-  },
-  {
-    id: "3",
-    photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=600&fit=crop",
-    firstName: "Maya",
-    age: "23-28",
-    occupation: "Graduate Student",
-    livingSetup: "Co-Living Space",
-    location: "University District, 1.2 km away",
-    compatibilityScore: 78,
-    lifestyleTags: ["Clean", "Quiet", "Early bird", "Non-smoker", "Pet-friendly"],
-    matchingTags: ["Clean", "Quiet", "Early bird"],
-    bio: "PhD student looking for a quiet place to focus on research. I'm usually up early and in bed by 10pm.",
-  },
-  {
-    id: "4",
-    photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop",
-    firstName: "Jamie",
-    age: "26-32",
-    occupation: "Graphic Designer",
-    livingSetup: "Private Room (Shared House)",
-    location: "East Side, 4.1 km away",
-    compatibilityScore: 85,
-    lifestyleTags: ["Social", "Creative", "Night owl", "Non-smoker", "Active"],
-    matchingTags: ["Social", "Creative"],
-    bio: "Creative professional who loves a vibrant home atmosphere. I enjoy cooking and having friends over!",
-  },
-];
+// Mock data removed for production
+const MOCK_PROFILES: RoommateProfile[] = [];
 
 interface RoommateMatchingProps {
   onBack: () => void;
