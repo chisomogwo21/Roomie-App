@@ -31,33 +31,8 @@ export function Home({
   onViewListing
 }: HomeProps) {
 
-  // Mock data for recommended roommates
-  const recommendedProfiles = [
-    {
-      id: "1",
-      name: "Sarah K.",
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
-      compatibility: 92,
-      setup: "Looking for roommate",
-      chips: ["Quiet", "Clean", "WFH"],
-    },
-    {
-      id: "2",
-      name: "Alex M.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-      compatibility: 88,
-      setup: "Room available",
-      chips: ["Social", "Cook", "Early Bird"],
-    },
-    {
-      id: "3",
-      name: "Emma R.",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
-      compatibility: 85,
-      setup: "Looking for roommate",
-      chips: ["Quiet", "WFH", "Pet-friendly"],
-    },
-  ];
+  // Mock data for recommended roommates removed for production
+  const recommendedProfiles: any[] = [];
 
   const [properties, setProperties] = useState<any[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
@@ -266,7 +241,7 @@ export function Home({
                 </p>
                 {/* Lifestyle chips */}
                 <div className="flex flex-wrap gap-[4px]">
-                  {profile.chips.slice(0, 2).map((chip, index) => (
+                  {profile.chips.slice(0, 2).map((chip: string, index: number) => (
                     <span
                       key={index}
                       className="px-[6px] py-[2px] bg-[#f3f4f6] rounded-[4px] font-['Inter:Medium',sans-serif] font-medium text-[9px] leading-[12px] text-[#6b7280]"

@@ -7,130 +7,12 @@ interface MapsScreenProps {
   onChooseLocation: () => void;
 }
 
-// Mock location data - Worldwide cities and addresses with focus on East Africa & Rwanda
-const MOCK_LOCATIONS = [
-  // RWANDA - Our Startup Location (Priority Locations)
-  { id: 1, name: "KG 5 Avenue, Kigali City Center", city: "Kigali", country: "Rwanda", coords: { x: -200, y: 80 } },
-  { id: 2, name: "Kimihurura, Kigali", city: "Kigali", country: "Rwanda", coords: { x: -205, y: 85 } },
-  { id: 3, name: "Nyarugenge, Kigali", city: "Kigali", country: "Rwanda", coords: { x: -195, y: 82 } },
-  { id: 4, name: "Remera, Gasabo, Kigali", city: "Kigali", country: "Rwanda", coords: { x: -198, y: 78 } },
-  { id: 5, name: "Kicukiro, Kigali", city: "Kigali", country: "Rwanda", coords: { x: -202, y: 88 } },
-  { id: 6, name: "Gikondo Industrial Zone, Kigali", city: "Kigali", country: "Rwanda", coords: { x: -207, y: 90 } },
-  { id: 7, name: "Kabeza, Kigali", city: "Kigali", country: "Rwanda", coords: { x: -197, y: 86 } },
-  { id: 8, name: "Kimironko, Kigali", city: "Kigali", country: "Rwanda", coords: { x: -203, y: 79 } },
-  { id: 9, name: "Kiyovu, Kigali", city: "Kigali", country: "Rwanda", coords: { x: -199, y: 83 } },
-  { id: 10, name: "Musanze City Center", city: "Musanze", country: "Rwanda", coords: { x: -195, y: 75 } },
-  { id: 11, name: "Rubavu, Gisenyi", city: "Rubavu", country: "Rwanda", coords: { x: -190, y: 78 } },
-  { id: 12, name: "Huye, Butare", city: "Huye", country: "Rwanda", coords: { x: -205, y: 95 } },
-  { id: 13, name: "Muhanga City", city: "Muhanga", country: "Rwanda", coords: { x: -201, y: 87 } },
-  { id: 14, name: "Nyagatare Town", city: "Nyagatare", country: "Rwanda", coords: { x: -210, y: 76 } },
-  { id: 15, name: "Rusizi, Cyangugu", city: "Rusizi", country: "Rwanda", coords: { x: -188, y: 92 } },
-  
-  // KENYA - Major East African Hub
-  { id: 16, name: "Westlands, Nairobi", city: "Nairobi", country: "Kenya", coords: { x: -215, y: 85 } },
-  { id: 17, name: "Kilimani, Nairobi", city: "Nairobi", country: "Kenya", coords: { x: -220, y: 88 } },
-  { id: 18, name: "Karen, Nairobi", city: "Nairobi", country: "Kenya", coords: { x: -218, y: 90 } },
-  { id: 19, name: "Upperhill, Nairobi", city: "Nairobi", country: "Kenya", coords: { x: -217, y: 86 } },
-  { id: 20, name: "Mombasa Road, Nairobi", city: "Nairobi", country: "Kenya", coords: { x: -222, y: 89 } },
-  { id: 21, name: "Nyali, Mombasa", city: "Mombasa", country: "Kenya", coords: { x: -225, y: 100 } },
-  { id: 22, name: "Diani Beach, Mombasa", city: "Mombasa", country: "Kenya", coords: { x: -227, y: 102 } },
-  { id: 23, name: "Kisumu Central", city: "Kisumu", country: "Kenya", coords: { x: -208, y: 82 } },
-  { id: 24, name: "Nakuru Town", city: "Nakuru", country: "Kenya", coords: { x: -212, y: 84 } },
-  { id: 25, name: "Eldoret City", city: "Eldoret", country: "Kenya", coords: { x: -210, y: 80 } },
-  
-  // UGANDA
-  { id: 26, name: "Kololo, Kampala", city: "Kampala", country: "Uganda", coords: { x: -205, y: 82 } },
-  { id: 27, name: "Nakasero, Kampala", city: "Kampala", country: "Uganda", coords: { x: -207, y: 84 } },
-  { id: 28, name: "Bugolobi, Kampala", city: "Kampala", country: "Uganda", coords: { x: -203, y: 83 } },
-  { id: 29, name: "Entebbe Road, Kampala", city: "Kampala", country: "Uganda", coords: { x: -209, y: 85 } },
-  { id: 30, name: "Jinja Town", city: "Jinja", country: "Uganda", coords: { x: -211, y: 82 } },
-  { id: 31, name: "Mbarara City", city: "Mbarara", country: "Uganda", coords: { x: -200, y: 88 } },
-  
-  // TANZANIA
-  { id: 32, name: "Masaki, Dar es Salaam", city: "Dar es Salaam", country: "Tanzania", coords: { x: -218, y: 105 } },
-  { id: 33, name: "Mikocheni, Dar es Salaam", city: "Dar es Salaam", country: "Tanzania", coords: { x: -220, y: 107 } },
-  { id: 34, name: "Oyster Bay, Dar es Salaam", city: "Dar es Salaam", country: "Tanzania", coords: { x: -216, y: 106 } },
-  { id: 35, name: "Arusha City Center", city: "Arusha", country: "Tanzania", coords: { x: -213, y: 95 } },
-  { id: 36, name: "Mwanza City", city: "Mwanza", country: "Tanzania", coords: { x: -205, y: 92 } },
-  { id: 37, name: "Dodoma Capital City", city: "Dodoma", country: "Tanzania", coords: { x: -214, y: 100 } },
-  { id: 38, name: "Stone Town, Zanzibar", city: "Zanzibar", country: "Tanzania", coords: { x: -222, y: 108 } },
-  
-  // ETHIOPIA
-  { id: 39, name: "Bole, Addis Ababa", city: "Addis Ababa", country: "Ethiopia", coords: { x: -220, y: 70 } },
-  { id: 40, name: "Kazanchis, Addis Ababa", city: "Addis Ababa", country: "Ethiopia", coords: { x: -222, y: 72 } },
-  { id: 41, name: "Piazza, Addis Ababa", city: "Addis Ababa", country: "Ethiopia", coords: { x: -218, y: 71 } },
-  { id: 42, name: "Bahir Dar City", city: "Bahir Dar", country: "Ethiopia", coords: { x: -217, y: 65 } },
-  { id: 43, name: "Hawassa City", city: "Hawassa", country: "Ethiopia", coords: { x: -221, y: 75 } },
-  
-  // BURUNDI
-  { id: 44, name: "Rohero, Bujumbura", city: "Bujumbura", country: "Burundi", coords: { x: -197, y: 90 } },
-  { id: 45, name: "Kiriri, Bujumbura", city: "Bujumbura", country: "Burundi", coords: { x: -199, y: 91 } },
-  { id: 46, name: "Gitega City", city: "Gitega", country: "Burundi", coords: { x: -200, y: 92 } },
-  
-  // OTHER AFRICAN COUNTRIES
-  { id: 47, name: "V&A Waterfront, Cape Town", city: "Cape Town", country: "South Africa", coords: { x: -185, y: 165 } },
-  { id: 48, name: "Sandton City, Johannesburg", city: "Johannesburg", country: "South Africa", coords: { x: -195, y: 155 } },
-  { id: 49, name: "Tahrir Square, Cairo", city: "Cairo", country: "Egypt", coords: { x: -205, y: 45 } },
-  { id: 50, name: "Victoria Island, Lagos", city: "Lagos", country: "Nigeria", coords: { x: -140, y: 95 } },
-  { id: 51, name: "Lekki, Lagos", city: "Lagos", country: "Nigeria", coords: { x: -142, y: 97 } },
-  { id: 52, name: "Abuja Central Area", city: "Abuja", country: "Nigeria", coords: { x: -145, y: 90 } },
-  { id: 53, name: "Accra Central", city: "Accra", country: "Ghana", coords: { x: -130, y: 98 } },
-  { id: 54, name: "Casablanca Marina", city: "Casablanca", country: "Morocco", coords: { x: -150, y: 35 } },
-  
-  // Asia
-  { id: 55, name: "Jl. Jend. Sudirman, Gowongan, Yogyakarta", city: "Yogyakarta", country: "Indonesia", coords: { x: -500, y: 115 } },
-  { id: 56, name: "Shibuya Crossing, Tokyo", city: "Tokyo", country: "Japan", coords: { x: -650, y: 50 } },
-  { id: 57, name: "Marina Bay Sands, Singapore", city: "Singapore", country: "Singapore", coords: { x: -480, y: 108 } },
-  { id: 58, name: "Gangnam-gu, Seoul", city: "Seoul", country: "South Korea", coords: { x: -630, y: 48 } },
-  { id: 59, name: "The Bund, Shanghai", city: "Shanghai", country: "China", coords: { x: -600, y: 45 } },
-  { id: 60, name: "Connaught Place, New Delhi", city: "New Delhi", country: "India", coords: { x: -350, y: 55 } },
-  { id: 61, name: "Sukhumvit Road, Bangkok", city: "Bangkok", country: "Thailand", coords: { x: -470, y: 100 } },
-  { id: 62, name: "Bonifacio Global City, Manila", city: "Manila", country: "Philippines", coords: { x: -550, y: 105 } },
-  { id: 63, name: "Seminyak Beach, Bali", city: "Bali", country: "Indonesia", coords: { x: -510, y: 120 } },
-  { id: 64, name: "KLCC, Kuala Lumpur", city: "Kuala Lumpur", country: "Malaysia", coords: { x: -475, y: 105 } },
-  { id: 65, name: "Hanoi Old Quarter", city: "Hanoi", country: "Vietnam", coords: { x: -520, y: 95 } },
-  { id: 66, name: "Ho Chi Minh City District 1", city: "Ho Chi Minh", country: "Vietnam", coords: { x: -525, y: 110 } },
-  
-  // Europe
-  { id: 67, name: "Champs-Élysées, Paris", city: "Paris", country: "France", coords: { x: -125, y: 25 } },
-  { id: 68, name: "Oxford Street, London", city: "London", country: "United Kingdom", coords: { x: -110, y: 20 } },
-  { id: 69, name: "Las Ramblas, Barcelona", city: "Barcelona", country: "Spain", coords: { x: -120, y: 38 } },
-  { id: 70, name: "Piazza del Duomo, Milan", city: "Milan", country: "Italy", coords: { x: -140, y: 32 } },
-  { id: 71, name: "Alexanderplatz, Berlin", city: "Berlin", country: "Germany", coords: { x: -145, y: 22 } },
-  { id: 72, name: "Dam Square, Amsterdam", city: "Amsterdam", country: "Netherlands", coords: { x: -130, y: 18 } },
-  { id: 73, name: "Red Square, Moscow", city: "Moscow", country: "Russia", coords: { x: -240, y: 15 } },
-  { id: 74, name: "Sultanahmet Square, Istanbul", city: "Istanbul", country: "Turkey", coords: { x: -190, y: 38 } },
-  
-  // North America
-  { id: 75, name: "Times Square, New York, NY", city: "New York", country: "United States", coords: { x: 150, y: 35 } },
-  { id: 76, name: "Hollywood Boulevard, Los Angeles, CA", city: "Los Angeles", country: "United States", coords: { x: 80, y: 50 } },
-  { id: 77, name: "Michigan Avenue, Chicago, IL", city: "Chicago", country: "United States", coords: { x: 130, y: 38 } },
-  { id: 78, name: "Robson Street, Vancouver, BC", city: "Vancouver", country: "Canada", coords: { x: 60, y: 20 } },
-  { id: 79, name: "Yonge Street, Toronto, ON", city: "Toronto", country: "Canada", coords: { x: 140, y: 30 } },
-  { id: 80, name: "Reforma Avenue, Mexico City", city: "Mexico City", country: "Mexico", coords: { x: 100, y: 90 } },
-  { id: 81, name: "South Beach, Miami, FL", city: "Miami", country: "United States", coords: { x: 160, y: 75 } },
-  
-  // South America
-  { id: 82, name: "Avenida Paulista, São Paulo", city: "São Paulo", country: "Brazil", coords: { x: 220, y: 140 } },
-  { id: 83, name: "Copacabana Beach, Rio de Janeiro", city: "Rio de Janeiro", country: "Brazil", coords: { x: 230, y: 135 } },
-  { id: 84, name: "Plaza de Mayo, Buenos Aires", city: "Buenos Aires", country: "Argentina", coords: { x: 200, y: 160 } },
-  { id: 85, name: "Miraflores, Lima", city: "Lima", country: "Peru", coords: { x: 150, y: 125 } },
-  
-  // Oceania
-  { id: 86, name: "Sydney Opera House, Sydney", city: "Sydney", country: "Australia", coords: { x: -700, y: 165 } },
-  { id: 87, name: "Queen Street, Auckland", city: "Auckland", country: "New Zealand", coords: { x: -750, y: 185 } },
-  { id: 88, name: "Bourke Street, Melbourne", city: "Melbourne", country: "Australia", coords: { x: -710, y: 175 } },
-  
-  // Middle East
-  { id: 89, name: "Burj Khalifa, Dubai", city: "Dubai", country: "UAE", coords: { x: -280, y: 60 } },
-  { id: 90, name: "Corniche Road, Doha", city: "Doha", country: "Qatar", coords: { x: -285, y: 62 } },
-  { id: 91, name: "King Fahd Road, Riyadh", city: "Riyadh", country: "Saudi Arabia", coords: { x: -270, y: 58 } },
-  { id: 92, name: "Rothschild Boulevard, Tel Aviv", city: "Tel Aviv", country: "Israel", coords: { x: -210, y: 42 } },
-];
+// Mock location data removed for production
+const MOCK_LOCATIONS: any[] = [];
 
 export function MapsScreen({ onBack, onChooseLocation }: MapsScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState(MOCK_LOCATIONS[0].name);
+  const [selectedLocation, setSelectedLocation] = useState("Search or choose a location");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredLocations, setFilteredLocations] = useState(MOCK_LOCATIONS);
   const [mapPosition, setMapPosition] = useState({ x: -301, y: -8 });
@@ -204,7 +86,11 @@ export function MapsScreen({ onBack, onChooseLocation }: MapsScreenProps) {
   };
 
   const handleUseCurrentLocation = () => {
-    // Simulate getting current location - use a random location
+    // Simulate getting current location
+    if (MOCK_LOCATIONS.length === 0) {
+      setSelectedLocation("Your current location");
+      return;
+    }
     const randomIndex = Math.floor(Math.random() * MOCK_LOCATIONS.length);
     const currentLoc = MOCK_LOCATIONS[randomIndex];
     setSelectedLocation(currentLoc.name);

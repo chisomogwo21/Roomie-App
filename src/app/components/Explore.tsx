@@ -1,14 +1,12 @@
 import { useState } from "react";
-import { Search, SlidersHorizontal, MapPin } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { FilterModal } from "./FilterModal";
 
 interface ExploreProps {
-  onViewListing?: () => void;
-  onViewProfile?: () => void;
   onSelectCity?: (cityName: string) => void;
 }
 
-export function Explore({ onViewListing, onViewProfile, onSelectCity }: ExploreProps) {
+export function Explore({ onSelectCity }: ExploreProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
 
@@ -17,64 +15,10 @@ export function Explore({ onViewListing, onViewProfile, onSelectCity }: ExploreP
     setIsFilterOpen(false);
   };
 
-  // Mock city data
-  const popularCities = [
-    {
-      id: "1",
-      name: "Kigali",
-      subtitle: "Shared homes & rentals",
-      image: "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=600&h=400&fit=crop",
-      homesCount: 120,
-    },
-    {
-      id: "2",
-      name: "Nairobi",
-      subtitle: "Homes available",
-      image: "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?w=600&h=400&fit=crop",
-      homesCount: 95,
-    },
-    {
-      id: "3",
-      name: "Kampala",
-      subtitle: "Shared homes & rentals",
-      image: "https://images.unsplash.com/photo-1609743522653-52354461eb27?w=600&h=400&fit=crop",
-      homesCount: 78,
-    },
-  ];
-
-  const studentCities = [
-    {
-      id: "4",
-      name: "Butare",
-      subtitle: "Student-friendly homes",
-      image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&h=400&fit=crop",
-      homesCount: 45,
-    },
-    {
-      id: "5",
-      name: "Musanze",
-      subtitle: "Shared homes & rentals",
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop",
-      homesCount: 32,
-    },
-  ];
-
-  const nearbyCities = [
-    {
-      id: "6",
-      name: "Rubavu",
-      subtitle: "Homes available",
-      image: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=600&h=400&fit=crop",
-      homesCount: 28,
-    },
-    {
-      id: "7",
-      name: "Rwamagana",
-      subtitle: "Shared homes & rentals",
-      image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&h=400&fit=crop",
-      homesCount: 19,
-    },
-  ];
+  // Mock city data removed for production
+  const popularCities: any[] = [];
+  const studentCities: any[] = [];
+  const nearbyCities: any[] = [];
 
   return (
     <>

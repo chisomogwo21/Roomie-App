@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Check, X, Trash2, Search, Filter } from "lucide-react";
+import { Eye, Check, X, Trash2, Search, Filter, Home } from "lucide-react";
 
 interface Listing {
   id: string;
@@ -12,68 +12,7 @@ interface Listing {
   owner: string;
 }
 
-const mockListings: Listing[] = [
-  {
-    id: "1",
-    title: "Cozy 2BR in Downtown Boston",
-    city: "Boston",
-    livingSetup: "2 bed • 1 bath",
-    listingType: "Shared",
-    status: "Active",
-    dateCreated: "2026-01-18",
-    owner: "Emma Wilson"
-  },
-  {
-    id: "2",
-    title: "Modern Studio Near MIT",
-    city: "Cambridge",
-    livingSetup: "Studio",
-    listingType: "Entire Home",
-    status: "Active",
-    dateCreated: "2026-01-19",
-    owner: "James Chen"
-  },
-  {
-    id: "3",
-    title: "Spacious 3BR with Backyard",
-    city: "San Francisco",
-    livingSetup: "3 bed • 2 bath",
-    listingType: "Shared",
-    status: "Pending",
-    dateCreated: "2026-01-20",
-    owner: "Sarah Davis"
-  },
-  {
-    id: "4",
-    title: "Sunny Room in Shared Apartment",
-    city: "New York",
-    livingSetup: "1 bed • Shared bath",
-    listingType: "Shared",
-    status: "Active",
-    dateCreated: "2026-01-17",
-    owner: "Mike Johnson"
-  },
-  {
-    id: "5",
-    title: "Luxury Loft Downtown",
-    city: "Los Angeles",
-    livingSetup: "2 bed • 2 bath",
-    listingType: "Entire Home",
-    status: "Removed",
-    dateCreated: "2026-01-15",
-    owner: "Lisa Anderson"
-  },
-  {
-    id: "6",
-    title: "Student-Friendly Near Campus",
-    city: "Austin",
-    livingSetup: "4 bed • 2 bath",
-    listingType: "Shared",
-    status: "Active",
-    dateCreated: "2026-01-19",
-    owner: "David Park"
-  },
-];
+const mockListings: Listing[] = [];
 
 export function AdminListings() {
   const [listings] = useState<Listing[]>(mockListings);

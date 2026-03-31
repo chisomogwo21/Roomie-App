@@ -555,7 +555,7 @@ export default function App() {
               setCurrentChatStatus("accepted");
               // Assuming clicking notification opens a chat with whoever triggered it. 
               // Set a placeholder recipientId until notifications inject real userIds.
-              setCurrentChatRecipientId("notification-sender-id");
+          setCurrentChatRecipientId("");
               setShowChatThread(true);
               break;
               
@@ -626,7 +626,7 @@ export default function App() {
         onChat={() => {
           setShowPublicProfile(false);
           setCurrentChatStatus("accepted");
-          setCurrentChatRecipientId("mock-user-id");
+          setCurrentChatRecipientId("");
           setShowChatThread(true);
         }}
         onSendRequest={() => {

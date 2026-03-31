@@ -19,21 +19,9 @@ interface Request {
   date: string;
 }
 
-const mockMatches: Match[] = [
-  { id: "1", user1: "Emma Wilson", user2: "Sarah Davis", compatibilityScore: 92, date: "2026-01-19", status: "Active" },
-  { id: "2", user1: "James Chen", user2: "David Park", compatibilityScore: 85, date: "2026-01-18", status: "Active" },
-  { id: "3", user1: "Mike Johnson", user2: "Tom Rodriguez", compatibilityScore: 78, date: "2026-01-17", status: "Active" },
-  { id: "4", user1: "Rachel Kim", user2: "Lisa Anderson", compatibilityScore: 88, date: "2026-01-16", status: "Inactive" },
-];
+const mockMatches: Match[] = [];
 
-const mockRequests: Request[] = [
-  { id: "1", from: "Emma Wilson", to: "James Chen", listingTitle: "Modern Studio Near MIT", status: "Pending", date: "2026-01-20" },
-  { id: "2", from: "Sarah Davis", to: "David Park", listingTitle: "Student-Friendly Near Campus", status: "Accepted", date: "2026-01-19" },
-  { id: "3", from: "Mike Johnson", to: "Emma Wilson", listingTitle: "Cozy 2BR in Downtown Boston", status: "Declined", date: "2026-01-19" },
-  { id: "4", from: "Rachel Kim", to: "Tom Rodriguez", listingTitle: "Spacious 3BR with Backyard", status: "Pending", date: "2026-01-18" },
-  { id: "5", from: "David Park", to: "Lisa Anderson", listingTitle: "Luxury Loft Downtown", status: "Accepted", date: "2026-01-17" },
-  { id: "6", from: "Tom Rodriguez", to: "James Chen", listingTitle: "Modern Studio Near MIT", status: "Pending", date: "2026-01-17" },
-];
+const mockRequests: Request[] = [];
 
 export function AdminMatches() {
   const [activeTab, setActiveTab] = useState<"matches" | "requests">("matches");

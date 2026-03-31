@@ -12,20 +12,7 @@ interface City {
   category: "Popular" | "Student" | "Other";
 }
 
-const mockCities: City[] = [
-  { id: "1", name: "Boston", state: "MA", country: "USA", listingsCount: 24, usersCount: 89, enabled: true, category: "Popular" },
-  { id: "2", name: "Cambridge", state: "MA", country: "USA", listingsCount: 12, usersCount: 45, enabled: true, category: "Student" },
-  { id: "3", name: "San Francisco", state: "CA", country: "USA", listingsCount: 31, usersCount: 112, enabled: true, category: "Popular" },
-  { id: "4", name: "New York", state: "NY", country: "USA", listingsCount: 45, usersCount: 156, enabled: true, category: "Popular" },
-  { id: "5", name: "Los Angeles", state: "CA", country: "USA", listingsCount: 28, usersCount: 98, enabled: true, category: "Popular" },
-  { id: "6", name: "Austin", state: "TX", country: "USA", listingsCount: 18, usersCount: 67, enabled: true, category: "Student" },
-  { id: "7", name: "Seattle", state: "WA", country: "USA", listingsCount: 15, usersCount: 52, enabled: true, category: "Popular" },
-  { id: "8", name: "Denver", state: "CO", country: "USA", listingsCount: 9, usersCount: 34, enabled: true, category: "Other" },
-  { id: "9", name: "Portland", state: "OR", country: "USA", listingsCount: 7, usersCount: 28, enabled: false, category: "Other" },
-  { id: "10", name: "Chicago", state: "IL", country: "USA", listingsCount: 22, usersCount: 78, enabled: true, category: "Popular" },
-  { id: "11", name: "Ann Arbor", state: "MI", country: "USA", listingsCount: 11, usersCount: 41, enabled: true, category: "Student" },
-  { id: "12", name: "Madison", state: "WI", country: "USA", listingsCount: 6, usersCount: 23, enabled: true, category: "Student" },
-];
+const mockCities: City[] = [];
 
 export function AdminCities() {
   const [cities, setCities] = useState<City[]>(mockCities);
