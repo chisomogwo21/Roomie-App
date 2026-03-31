@@ -645,7 +645,18 @@ export default function App() {
 
   // If matching is active, show it
   if (showMatching) {
-    return <RoommateMatching onBack={() => setShowMatching(false)} onViewProfile={handleViewProfile} />;
+    return (
+      <RoommateMatching 
+        onBack={() => setShowMatching(false)} 
+        onViewProfile={handleViewProfile} 
+        onStartChat={(userId) => {
+          setShowMatching(false);
+          setCurrentChatStatus("accepted");
+          setCurrentChatRecipientId(userId);
+          setShowChatThread(true);
+        }}
+      />
+    );
   }
 
   // If public profile is active, show it

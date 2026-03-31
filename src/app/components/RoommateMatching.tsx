@@ -63,9 +63,10 @@ const MOCK_PROFILES: RoommateProfile[] = [
 interface RoommateMatchingProps {
   onBack: () => void;
   onViewProfile?: (userId: string) => void;
+  onStartChat?: (userId: string) => void;
 }
 
-export function RoommateMatching({ onBack, onViewProfile }: RoommateMatchingProps) {
+export function RoommateMatching({ onBack, onViewProfile, onStartChat }: RoommateMatchingProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipedProfiles, setSwipedProfiles] = useState<string[]>([]);
   const [matchedProfile, setMatchedProfile] = useState<RoommateProfile | null>(null);
@@ -102,8 +103,11 @@ export function RoommateMatching({ onBack, onViewProfile }: RoommateMatchingProp
         profile={matchedProfile}
         onClose={handleCloseMatch}
         onStartChat={() => {
-          // Navigate to messages screen
-          handleCloseMatch();
+          if (onStartChat) {
+            onStartChat(matchedProfile.id);
+          } else {
+            handleCloseMatch();
+          }
         }}
       />
     );
