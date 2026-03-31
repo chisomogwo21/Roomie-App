@@ -20,13 +20,19 @@ export function Explore({ onViewListing }: ExploreProps) {
   useEffect(() => {
     async function loadProperties() {
       setLoading(true);
-      const { data, error } = await fetchProperties();
-      if (error) {
-        setError("Failed to load properties");
-      } else {
-        setProperties(data || []);
+      try {
+        const { data, error } = await fetchProperties();
+        if (error) {
+          setError("Failed to load properties");
+        } else {
+          setProperties(data || []);
+        }
+      } catch (err) {
+        console.error("Error loading properties:", err);
+        setError("An unexpected error occurred");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadProperties();
   }, []);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Toaster } from "./components/ui/sonner";
 import { Home } from "./components/Home";
+import { Loader2 } from "lucide-react";
 import { CommunityFeed } from "./components/CommunityFeed";
 import { BottomNavigation } from "./components/BottomNavigation";
 import { LifestylePreferencesFigma } from "./components/LifestylePreferencesFigma";
@@ -107,6 +108,7 @@ export default function App() {
   const [_userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
   const [hasCompletedPreferences, setHasCompletedPreferences] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   
   const [userLocation, setUserLocation] = useState(() => {
     return localStorage.getItem("userLocation") || "Kicukiro, Kigali";
@@ -125,20 +127,21 @@ export default function App() {
   useEffect(() => {
     // Check for existing session on mount
     const checkSession = async () => {
-      const { data: { session } } = await getSession();
-      
-      // Handle password reset recovery link
-      const hash = window.location.hash;
-      if (hash && hash.includes("type=recovery")) {
-        setShowLogin(false);
-        setShowSignUp(false);
-        setShowForgotPassword(false);
-        setShowVerifyEmail(false);
-        setShowChangePassword(true);
-        return;
-      }
+      try {
+        const { data: { session } } = await getSession();
+        
+        // Handle password reset recovery link
+        const hash = window.location.hash;
+        if (hash && hash.includes("type=recovery")) {
+          setShowLogin(false);
+          setShowSignUp(false);
+          setShowForgotPassword(false);
+          setShowVerifyEmail(false);
+          setShowChangePassword(true);
+          return;
+        }
 
-      if (session) {
+        if (session) {
         setShowLogin(false);
         setActiveTab("home");
         
@@ -179,6 +182,11 @@ export default function App() {
         setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
         setUserEmail(resolvedEmail);
       }
+    } catch (err) {
+      console.error("Initialization error:", err);
+    } finally {
+      setIsInitializing(false);
+    }
     };
     checkSession();
 
@@ -263,6 +271,18 @@ export default function App() {
     addToRecentViewed(listing);
     setShowPropertyDetails(true);
   };
+
+  // If app is still identifying the user, show a loading screen
+  if (isInitializing) {
+    return (
+      <div className="size-full flex flex-col items-center justify-center bg-[#fcfcfd]">
+        <Loader2 className="w-[40px] h-[40px] animate-spin text-[#fe456a] mb-4" />
+        <p className="text-[#9da4ae] font-['Inter:Medium',sans-serif] text-[14px]">
+          Getting everything ready...
+        </p>
+      </div>
+    );
+  }
 
   // If admin dashboard is active, show it (full screen, no navigation)
   if (showAdminDashboard) {
@@ -923,9 +943,20 @@ export default function App() {
             onFavorite={() => setShowFavorites(true)}
             onRecentViewed={() => setShowRecentViewed(true)}
             onSignOut={async () => {
-              // Sign out from Supabase
-              await signOut();
-              // Navigation is handled by auth listener in useEffect
+              try {
+                // Sign out from Supabase
+                await signOut();
+              } catch (err) {
+                console.error("Sign out error:", err);
+              } finally {
+                // Guaranteed cleanup and redirect
+                setShowLogin(true);
+                setUserName("Guest");
+                setUserFullName("");
+                setUserEmail("");
+                setUserAvatar("");
+                setActiveTab("home");
+              }
             }}
           />
         )}

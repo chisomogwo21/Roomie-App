@@ -33,13 +33,18 @@ export function CommunityFeed({ onBack, onViewProfile }: CommunityFeedProps) {
   useEffect(() => {
     async function loadPosts() {
       setLoading(true);
-      const { data, error } = await fetchPosts();
-      if (error) {
-        toast.error("Failed to load community posts");
-      } else {
-        setPosts(data || []);
+      try {
+        const { data, error } = await fetchPosts();
+        if (error) {
+          toast.error("Failed to load community posts");
+        } else {
+          setPosts(data || []);
+        }
+      } catch (err) {
+        console.error("Error loading posts:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     loadPosts();

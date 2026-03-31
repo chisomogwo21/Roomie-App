@@ -29,18 +29,23 @@ export function Messages({ onBack, onOpenChat }: MessagesProps) {
   useEffect(() => {
     async function loadConversations() {
       setLoading(true);
-      const data = await fetchRecentConversations();
-      if (data) {
-        const formatted = data.map(conv => ({
-          id: conv.id,
-          name: conv.full_name,
-          message: conv.last_message,
-          timestamp: new Date(conv.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          avatar: conv.avatar_url || imgEllipse17
-        }));
-        setMessages(formatted);
+      try {
+        const data = await fetchRecentConversations();
+        if (data) {
+          const formatted = data.map(conv => ({
+            id: conv.id,
+            name: conv.full_name,
+            message: conv.last_message,
+            timestamp: new Date(conv.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            avatar: conv.avatar_url || imgEllipse17
+          }));
+          setMessages(formatted);
+        }
+      } catch (err) {
+        console.error("Error loading conversations:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadConversations();
   }, []);
