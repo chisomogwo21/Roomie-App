@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from "react";
 import svgPathsDelete from "../../imports/svg-t7iwy2crtn";
 import imgEllipse17 from "../../assets/placeholders/avatar.png";
 import type { RequestStatus } from "./RequestStatusBadge";
+import { fetchRecentConversations } from "../../lib/messages";
+import { Loader2 } from "lucide-react";
 
 interface Message {
   id: string;
@@ -22,6 +24,26 @@ export function Messages({ onBack, onOpenChat }: MessagesProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadConversations() {
+      setLoading(true);
+      const { data, error } = await fetchRecentConversations();
+      if (!error && data) {
+        const formatted = data.map(conv => ({
+          id: conv.other_user_id,
+          name: conv.other_user_name,
+          message: conv.last_message,
+          timestamp: new Date(conv.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          avatar: conv.other_user_avatar || imgEllipse17
+        }));
+        setMessages(formatted);
+      }
+      setLoading(false);
+    }
+    loadConversations();
+  }, []);
 
   // Demo active chat avatars
   // Demo active chat avatars removed for production
@@ -103,19 +125,30 @@ export function Messages({ onBack, onOpenChat }: MessagesProps) {
 
       {/* Messages List */}
       <div className="flex-1 overflow-auto px-[24px]">
-        <div className="flex flex-col gap-[16px]">
-          {messages.map((message) => (
-            <SwipeableMessageItem
-              key={message.id}
-              message={message}
-              isSwipedOpen={swipedMessageId === message.id}
-              onSwipeOpen={() => setSwipedMessageId(message.id)}
-              onSwipeClose={() => setSwipedMessageId(null)}
-              onDeleteClick={() => handleDeleteClick(message.id)}
-              onMessageClick={() => onOpenChat?.(message.id, "accepted")}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-[32px] h-[32px] animate-spin text-[#fe456a]" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-[#9da4ae] text-sm">No messages yet.</p>
+            <p className="text-[#9da4ae] text-xs mt-1">Start a conversation with a roommate!</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-[16px]">
+            {messages.map((message) => (
+              <SwipeableMessageItem
+                key={message.id}
+                message={message}
+                isSwipedOpen={swipedMessageId === message.id}
+                onSwipeOpen={() => setSwipedMessageId(message.id)}
+                onSwipeClose={() => setSwipedMessageId(null)}
+                onDeleteClick={() => handleDeleteClick(message.id)}
+                onMessageClick={() => onOpenChat?.(message.id, "accepted")}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}

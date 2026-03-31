@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Sparkles,
   Volume2,
@@ -132,24 +133,62 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
     }
   };
 
-  const handleContinue = () => {
-    console.log("Preferences saved:", {
-      cleanliness,
-      noiseLevel,
-      sleepRoutine,
-      workStyle,
-      comfortableWithVisitors,
-      comfortableWithPets,
-      smokingAllowed,
-      shareGroceries,
-      shareCooking,
-      personalityTags,
-      noSmoking,
-      noPets,
-      noFrequentVisitors,
-    });
-    // Call onComplete callback to close the screen
-    onComplete?.();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadExisting() {
+      try {
+        const { getProfile, getUser } = await import("../../lib/auth");
+        const { data: userData } = await getUser();
+        if (userData.user) {
+          const { data: profile } = await getProfile(userData.user.id);
+          if (profile && profile.lifestyle_tags) {
+            setPersonalityTags(profile.lifestyle_tags);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading existing preferences:", err);
+      }
+    }
+    loadExisting();
+  }, []);
+
+  const handleContinue = async () => {
+    setLoading(true);
+    const loadingToast = toast.loading("Saving your preferences...");
+    
+    try {
+      const { updateProfile } = await import("../../lib/auth");
+      
+      // Combine all habits and tags into one array for now
+      const allTags = [
+        ...personalityTags,
+        cleanliness ? `Cleanliness: ${cleanliness}` : "",
+        noiseLevel ? `Noise: ${noiseLevel}` : "",
+        sleepRoutine ? `Sleep: ${sleepRoutine}` : "",
+        workStyle ? `Work: ${workStyle}` : "",
+        comfortableWithVisitors ? "Visitors OK" : "",
+        comfortableWithPets ? "Pets OK" : "",
+        smokingAllowed ? "Smoking OK" : "",
+        shareGroceries ? "Shares Groceries" : "",
+        shareCooking ? "Shares Cooking" : "",
+      ].filter(Boolean);
+
+      const { error } = await updateProfile({
+        lifestyle_tags: allTags
+      });
+
+      if (error) throw error;
+
+      toast.dismiss(loadingToast);
+      toast.success("Preferences saved!");
+      onComplete?.();
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      toast.error(err.message || "Failed to save preferences");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -393,9 +432,10 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e5e7eb] px-6 py-4">
         <button
           onClick={handleContinue}
-          className="w-full bg-[#fe456a] text-white rounded-[8px] py-3 font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] hover:bg-[#e63d5f] transition-colors mb-2"
+          disabled={loading}
+          className="w-full bg-[#fe456a] text-white rounded-[8px] py-3 font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] hover:bg-[#e63d5f] transition-colors mb-2 disabled:bg-[#d2d6db]"
         >
-          Continue
+          {loading ? "Saving..." : "Continue"}
         </button>
         <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] text-[#9da4ae] leading-[16px] text-center">
           You can change this later.

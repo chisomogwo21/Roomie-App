@@ -2,7 +2,7 @@ import { ArrowLeft, Send, Info, Home } from "lucide-react";
 import { useState, useEffect } from "react";
 import { RequestStatusChip, type RequestStatus } from "./RequestStatusBadge";
 import imgEllipse18 from "../../assets/placeholders/avatar.png";
-import { sendMessage, fetchMessages, DatabaseMessage } from "../../lib/messages";
+import { sendMessage, fetchMessages, subscribeToMessages, DatabaseMessage } from "../../lib/messages";
 
 interface ChatMessage {
   id: string;
@@ -50,10 +50,13 @@ export function ChatThread({
   useEffect(() => {
     if (!recipientId) return;
 
+    let currentUserId: string = "";
+
     const loadMessages = async () => {
       try {
-        const { messages: dbMessages, currentUserId } = await fetchMessages(recipientId);
-        const formatted = dbMessages.map(msg => mapDatabaseToChatMessage(msg, currentUserId));
+        const { messages: dbMessages, currentUserId: uid } = await fetchMessages(recipientId);
+        currentUserId = uid;
+        const formatted = dbMessages.map(msg => mapDatabaseToChatMessage(msg, uid));
         setMessages(formatted);
       } catch (err) {
         console.error("Failed to load messages:", err);
@@ -61,7 +64,19 @@ export function ChatThread({
     };
 
     loadMessages();
-    // We could add realtime subscriptions here in the future
+
+    // Subscribe to real-time updates
+    const subscription = subscribeToMessages(recipientId, (newMessage: DatabaseMessage) => {
+      setMessages(prev => {
+        // Prevent duplicates (optimistic UI might already have it)
+        if (prev.find(m => m.id === newMessage.id)) return prev;
+        return [...prev, mapDatabaseToChatMessage(newMessage, currentUserId)];
+      });
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [recipientId]);
 
   const handleSend = async () => {

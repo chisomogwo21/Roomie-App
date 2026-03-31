@@ -1,12 +1,10 @@
-import { useState } from "react";
-import { ArrowLeft, Camera } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import imgProfilePhoto from "../../assets/placeholders/avatar.png";
 
 interface EditProfileProps {
   onBack: () => void;
-  initialFullName?: string;
-  initialEmail?: string;
   userAvatar?: string;
   onAvatarUpdate?: (url: string) => void;
 }
@@ -63,19 +61,18 @@ const NATIONALITIES = [
 
 export function EditProfile({ 
   onBack,
-  initialFullName = "Dammy",
-  initialEmail = "dammy@gmail.com",
   userAvatar,
   onAvatarUpdate
 }: EditProfileProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
 
   // Form state
   const [formData, setFormData] = useState({
-    fullName: initialFullName,
-    username: initialFullName.toLowerCase().replace(/\s+/g, "_") || "dammy_roomie",
-    email: initialEmail,
+    fullName: "",
+    username: "",
+    email: "",
     dateOfBirth: "",
     nationality: "",
     phoneNumber: "",
@@ -83,7 +80,47 @@ export function EditProfile({
     city: "",
     occupation: "",
     bio: "",
+    budgetMin: 0,
+    budgetMax: 2000,
+    lifestyleTags: [] as string[],
+    preferredLocation: "",
   });
+
+  useEffect(() => {
+    async function loadProfile() {
+      setIsFetching(true);
+      try {
+        const { getProfile, getUser } = await import("../../lib/auth");
+        const { data: userData } = await getUser();
+        if (userData.user) {
+          const { data: profile } = await getProfile(userData.user.id);
+          if (profile) {
+            setFormData({
+              fullName: profile.full_name || "",
+              username: profile.username || "",
+              email: profile.email || userData.user.email || "",
+              dateOfBirth: profile.date_of_birth || "",
+              nationality: profile.nationality || "",
+              phoneNumber: profile.phone_number || "",
+              country: profile.country || "",
+              city: profile.city || "",
+              occupation: profile.occupation || "",
+              bio: profile.bio || "",
+              budgetMin: profile.budget_min || 0,
+              budgetMax: profile.budget_max || 2000,
+              lifestyleTags: profile.lifestyle_tags || [],
+              preferredLocation: profile.preferred_location || "",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      } finally {
+        setIsFetching(false);
+      }
+    }
+    loadProfile();
+  }, []);
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -132,7 +169,11 @@ export function EditProfile({
         city: formData.city,
         occupation: formData.occupation,
         bio: formData.bio,
-        avatar_url: userAvatar // Ensure latest avatar is saved
+        avatar_url: userAvatar, // Ensure latest avatar is saved
+        budget_min: formData.budgetMin,
+        budget_max: formData.budgetMax,
+        lifestyle_tags: formData.lifestyleTags,
+        preferred_location: formData.preferredLocation
       });
 
       if (error) throw error;
@@ -257,8 +298,15 @@ export function EditProfile({
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
-        {/* Profile Photo Section */}
-        <div className="bg-white px-[24px] pt-[32px] pb-[24px] mb-[8px]">
+        {isFetching ? (
+          <div className="flex flex-col items-center justify-center py-[100px] gap-4">
+            <Loader2 className="w-[40px] h-[40px] animate-spin text-[#fe456a]" />
+            <p className="text-[#9da4ae] text-sm font-['Inter:Medium',sans-serif]">Loading profile...</p>
+          </div>
+        ) : (
+          <>
+            {/* Profile Photo Section */}
+            <div className="bg-white px-[24px] pt-[32px] pb-[24px] mb-[8px]">
           <div className="flex flex-col items-center">
             <div className="relative mb-[12px]">
               <input
@@ -524,6 +572,8 @@ export function EditProfile({
           </div>
         </div>
 
+          </>
+        )}
         {/* Bottom spacing */}
         <div className="h-[32px]" />
       </div>

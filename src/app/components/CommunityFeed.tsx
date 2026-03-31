@@ -1,10 +1,20 @@
-import { useState } from "react";
-import { Plus, ArrowLeft, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, ArrowLeft, Users, Loader2 } from "lucide-react";
 import { PostCard } from "./PostCard";
 import { CreatePostModal } from "./CreatePostModal";
 import { EmptyState } from "./EmptyState";
 import { toast } from "sonner";
-import { MOCK_PROFILES as SHARED_MOCK_PROFILES } from "../../lib/mockData";
+import { fetchPosts, createPost, subscribeToPosts, DatabasePost } from "../../lib/posts";
+
+interface CommunityFeedProps {
+  onBack?: () => void;
+  onViewProfile?: (userId: string) => void;
+}
+
+interface CommunityFeedProps {
+  onBack?: () => void;
+  onViewProfile?: (userId: string) => void;
+}
 
 const FILTER_CATEGORIES = [
   "All",
@@ -14,53 +24,66 @@ const FILTER_CATEGORIES = [
   "Tips & Advice",
 ];
 
-// Mock data for posts re-added for testing profile access
-const MOCK_POSTS: any[] = SHARED_MOCK_PROFILES.filter(p => ["user-101", "user-102", "user-103"].includes(p.id))
-  .map(p => ({
-    id: `post-${p.id}`,
-    userId: p.id,
-    userName: p.name,
-    userAvatar: p.photoUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
-    location: "Kigali, Nyarugenge",
-    timestamp: "2h ago",
-    text: p.bio,
-    tags: p.lifestyleTags,
-    matchScore: Math.random() > 0.5 ? "high" : "medium",
-  }));
-
-interface CommunityFeedProps {
-  onBack?: () => void;
-  onViewProfile?: (userId: string) => void;
-}
-
 export function CommunityFeed({ onBack, onViewProfile }: CommunityFeedProps) {
   const [activeFilter, setActiveFilter] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [posts, setPosts] = useState(MOCK_POSTS);
+  const [posts, setPosts] = useState<DatabasePost[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCreatePost = async (newPost: {
+  useEffect(() => {
+    async function loadPosts() {
+      setLoading(true);
+      const { data, error } = await fetchPosts();
+      if (error) {
+        toast.error("Failed to load community posts");
+      } else {
+        setPosts(data || []);
+      }
+      setLoading(false);
+    }
+
+    loadPosts();
+
+    // Subscribe to real-time updates
+    const subscription = subscribeToPosts((newPost) => {
+      setPosts((current) => [newPost, ...current]);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleCreatePost = async (newPostData: {
     text: string;
     category: string;
     location: string;
     budget: string;
   }) => {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const tags = [
+        newPostData.category !== "All" ? newPostData.category : "",
+        newPostData.budget ? `Budget ${newPostData.budget}` : "",
+      ].filter(Boolean);
 
-    const post = {
-      id: Date.now().toString(),
-      userName: "You",
-      userAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-      location: newPost.location,
-      timestamp: "Just now",
-      text: newPost.text,
-      tags: [
-        newPost.category !== "All" ? newPost.category : "",
-        newPost.budget ? `Budget ${newPost.budget}` : "",
-      ].filter(Boolean),
-      matchScore: null as any,
-    };
-    setPosts([post, ...posts]);
-    toast.success("Post created successfully!");
+      const { error } = await createPost({
+        text: newPostData.text,
+        category: newPostData.category,
+        location: newPostData.location,
+        budget: newPostData.budget,
+        tags: tags
+      });
+
+      if (error) {
+        toast.error("Failed to create post: " + error.message);
+      } else {
+        setIsModalOpen(false);
+        toast.success("Post created successfully!");
+        // Real-time subscription will handle adding the post to the list
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
   const filteredPosts =
@@ -125,15 +148,25 @@ export function CommunityFeed({ onBack, onViewProfile }: CommunityFeedProps) {
 
       {/* Feed */}
       <div className="px-6 py-4">
-        {filteredPosts.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-[32px] h-[32px] animate-spin text-[#fe456a]" />
+          </div>
+        ) : filteredPosts.length === 0 ? (
           <EmptyState onCreatePost={() => setIsModalOpen(true)} />
         ) : (
           <div className="flex flex-col gap-4 max-w-[600px] mx-auto">
             {filteredPosts.map((post) => (
               <PostCard 
                 key={post.id} 
-                {...post} 
-                userId={post.userId || "demo-user-id"} 
+                id={post.id}
+                userId={post.user_id} 
+                userName={post.profiles?.full_name || "Roomie User"}
+                userAvatar={post.profiles?.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop"}
+                location={post.location || "Kigali"}
+                timestamp={new Date(post.created_at).toLocaleDateString()}
+                text={post.text}
+                tags={post.tags}
                 onViewProfile={onViewProfile} 
               />
             ))}

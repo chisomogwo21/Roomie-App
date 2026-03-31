@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { MapPin, MessageCircle, Bell, Heart, Home as HomeIcon, ArrowRight, ChevronDown, Loader2 } from "lucide-react";
+import { MapPin, MessageCircle, Bell, Heart, Home as HomeIcon, ArrowRight, ChevronDown, Loader2, Sparkles, User } from "lucide-react";
 import { fetchProperties } from "../../lib/properties";
+import { getMatches, MatchResult } from "../../lib/matching";
 
 interface HomeProps {
   userName?: string;
@@ -31,30 +32,36 @@ export function Home({
   onViewListing
 }: HomeProps) {
 
-  // Mock data for recommended roommates removed for production
-  const recommendedProfiles: any[] = [];
-
+  const [matches, setMatches] = useState<MatchResult[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
-  const [loadingProperties, setLoadingProperties] = useState(true);
-  const [propertiesError, setPropertiesError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [selectedTopLocation, setSelectedTopLocation] = useState<string | null>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
   useEffect(() => {
-    async function getProperties() {
-      setLoadingProperties(true);
-      const { data, error } = await fetchProperties();
-      if (error) {
-        setPropertiesError("Failed to load properties.");
-      } else {
-        setProperties(data || []);
+    async function loadData() {
+      setLoading(true);
+      try {
+        const [propRes, matchRes] = await Promise.all([
+          fetchProperties(),
+          getMatches()
+        ]);
+
+        if (propRes.error) throw new Error("Failed to load properties.");
+        
+        setProperties(propRes.data || []);
+        setMatches(matchRes || []);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      setLoadingProperties(false);
     }
     
-    getProperties();
-  }, []);
+    loadData();
+  }, [hasCompletedPreferences]);
 
   // Determine greeting based on time of day
   const getGreeting = () => {
@@ -214,44 +221,54 @@ export function Home({
 
           {/* Horizontal scroll of profiles */}
           <div className="flex gap-[12px] overflow-x-auto pb-[8px] -mx-6 px-6">
-            {recommendedProfiles.map((profile) => (
-              <button
-                key={profile.id}
-                onClick={onStartMatching}
-                className="flex-none w-[140px] bg-[#fafafa] rounded-[12px] p-[12px] hover:bg-[#f3f4f6] transition-colors"
-              >
-                <div className="w-full aspect-square mb-[8px] rounded-[8px] overflow-hidden">
-                  <img
-                    src={profile.image}
-                    alt={profile.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] leading-[18px] text-[#1f2a37] mb-[4px] truncate">
-                  {profile.name}
-                </p>
-                <div className="flex items-center gap-[4px] mb-[6px]">
-                  <Heart className="w-[10px] h-[10px] text-[#fe456a] fill-[#fe456a]" />
-                  <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[11px] leading-[14px] text-[#fe456a]">
-                    {profile.compatibility}% match
-                  </span>
-                </div>
-                <p className="font-['Inter:Regular',sans-serif] font-normal text-[10px] leading-[14px] text-[#9da4ae] mb-[6px] truncate">
-                  {profile.setup}
-                </p>
-                {/* Lifestyle chips */}
-                <div className="flex flex-wrap gap-[4px]">
-                  {profile.chips.slice(0, 2).map((chip: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-[6px] py-[2px] bg-[#f3f4f6] rounded-[4px] font-['Inter:Medium',sans-serif] font-medium text-[9px] leading-[12px] text-[#6b7280]"
-                    >
-                      {chip}
+            {matches.filter((m: MatchResult) => m.type === 'roommate').length === 0 ? (
+              <div className="w-full py-4 text-center">
+                <p className="text-xs text-[#9da4ae]">No roommate matches found yet.</p>
+              </div>
+            ) : (
+              matches.filter((m: MatchResult) => m.type === 'roommate').map((profile: MatchResult) => (
+                <button
+                  key={profile.id}
+                  onClick={onStartMatching}
+                  className="flex-none w-[140px] bg-[#fafafa] rounded-[12px] p-[12px] hover:bg-[#f3f4f6] transition-colors"
+                >
+                  <div className="w-full aspect-square mb-[8px] rounded-[8px] overflow-hidden bg-[#f3f4f6] flex items-center justify-center">
+                    {profile.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt={profile.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-[40px] h-[40px] text-[#d2d6db]" />
+                    )}
+                  </div>
+                  <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] leading-[18px] text-[#1f2a37] mb-[4px] truncate">
+                    {profile.name}
+                  </p>
+                  <div className="flex items-center gap-[4px] mb-[6px]">
+                    <Sparkles className="w-[10px] h-[10px] text-[#fe456a] fill-[#fe456a]" />
+                    <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[11px] leading-[14px] text-[#fe456a]">
+                      {profile.matchScore}% match
                     </span>
-                  ))}
-                </div>
-              </button>
-            ))}
+                  </div>
+                  <p className="font-['Inter:Regular',sans-serif] font-normal text-[10px] leading-[14px] text-[#9da4ae] mb-[6px] truncate">
+                    {profile.location}
+                  </p>
+                  {/* Lifestyle chips */}
+                  <div className="flex flex-wrap gap-[4px]">
+                    {profile.lifestyle_tags?.slice(0, 2).map((chip: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-[6px] py-[2px] bg-[#f3f4f6] rounded-[4px] font-['Inter:Medium',sans-serif] font-medium text-[9px] leading-[12px] text-[#6b7280]"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                </button>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -298,18 +315,16 @@ export function Home({
         </p>
 
         <div className="flex gap-[12px] overflow-x-auto pb-[8px] -mx-6 px-6">
-          {!selectedTopLocation ? (
-            <p className="text-sm text-[#6b7280] italic px-6 w-full text-center">Select a location above to see available homes</p>
-          ) : loadingProperties ? (
+          {loading ? (
             <div className="flex-1 flex justify-center py-[20px]">
               <Loader2 className="w-[32px] h-[32px] animate-spin text-[#fe456a]" />
             </div>
-          ) : propertiesError ? (
-            <p className="text-sm text-[#f04438]">{propertiesError}</p>
-          ) : properties.filter(h => h.location.includes(selectedTopLocation)).length === 0 ? (
-            <p className="text-sm text-[#6b7280] px-6 w-full text-center">No properties found in {selectedTopLocation}.</p>
+          ) : error ? (
+            <p className="text-sm text-[#f04438]">{error}</p>
+          ) : properties.filter((h: any) => !selectedTopLocation || h.location.toLowerCase().includes(selectedTopLocation.toLowerCase())).length === 0 ? (
+            <p className="text-sm text-[#6b7280] px-6 w-full text-center">No properties found{selectedTopLocation ? ` in ${selectedTopLocation}` : ""}.</p>
           ) : (
-            properties.filter(h => !selectedTopLocation || h.location.includes(selectedTopLocation)).map((home) => (
+            properties.filter((h: any) => !selectedTopLocation || h.location.toLowerCase().includes(selectedTopLocation.toLowerCase())).map((home: any) => (
               <button
                 key={home.id}
                 onClick={() => onViewListing && onViewListing({

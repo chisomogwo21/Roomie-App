@@ -146,18 +146,38 @@ export default function App() {
         const { getProfile } = await import("../lib/auth");
         const { data: profile } = await getProfile(session.user.id);
         
+        let resolvedFullName = "";
+        let resolvedEmail = session.user?.email || "";
+        let resolvedAvatar = "";
+
         if (profile) {
-          setUserName(profile.full_name?.split(" ")[0] || "Roomie");
-          setUserFullName(profile.full_name || "");
-          setUserAvatar(profile.avatar_url || "");
-        } else {
-          // Fallback to metadata
-          const fullName = session.user?.user_metadata?.full_name || "";
-          setUserName(fullName.split(" ")[0] || "Roomie");
-          setUserFullName(fullName);
-          setUserAvatar(session.user?.user_metadata?.avatar_url || "");
+          resolvedFullName = profile.full_name || "";
+          resolvedAvatar = profile.avatar_url || "";
+          resolvedEmail = profile.email || resolvedEmail;
         }
-        setUserEmail(session.user?.email || "");
+
+        // Fallback sequence for name
+        if (!resolvedFullName) {
+          resolvedFullName = session.user?.user_metadata?.full_name || 
+                            session.user?.user_metadata?.username || 
+                            "";
+        }
+
+        // Final fallback: derive from email if no name at all
+        if (!resolvedFullName && resolvedEmail) {
+          const emailPrefix = resolvedEmail.split("@")[0];
+          resolvedFullName = emailPrefix
+            .split(/[\._]/)
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" ");
+        }
+
+        const firstName = resolvedFullName.split(" ")[0] || "Roomie";
+        
+        setUserName(firstName);
+        setUserFullName(resolvedFullName);
+        setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
+        setUserEmail(resolvedEmail);
       }
     };
     checkSession();
@@ -173,19 +193,38 @@ export default function App() {
         const { getProfile } = await import("../lib/auth");
         const { data: profile } = await getProfile(session.user.id);
         
+        let resolvedFullName = "";
+        let resolvedEmail = session.user?.email || "";
+        let resolvedAvatar = "";
+
         if (profile) {
-          setUserName(profile.full_name?.split(" ")[0] || "Roomie");
-          setUserFullName(profile.full_name || "");
-          setUserAvatar(profile.avatar_url || "");
-          setUserEmail(profile.email || session.user.email);
-        } else {
-          // Fallback to metadata
-          const fullName = session.user?.user_metadata?.full_name || "";
-          setUserName(fullName.split(" ")[0] || "Roomie");
-          setUserFullName(fullName);
-          setUserAvatar(session.user?.user_metadata?.avatar_url || "");
-          setUserEmail(session.user?.email || "");
+          resolvedFullName = profile.full_name || "";
+          resolvedAvatar = profile.avatar_url || "";
+          resolvedEmail = profile.email || resolvedEmail;
         }
+
+        // Fallback sequence for name
+        if (!resolvedFullName) {
+          resolvedFullName = session.user?.user_metadata?.full_name || 
+                            session.user?.user_metadata?.username || 
+                            "";
+        }
+
+        // Final fallback: derive from email if no name at all
+        if (!resolvedFullName && resolvedEmail) {
+          const emailPrefix = resolvedEmail.split("@")[0];
+          resolvedFullName = emailPrefix
+            .split(/[\._]/)
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" ");
+        }
+
+        const firstName = resolvedFullName.split(" ")[0] || "Roomie";
+        
+        setUserName(firstName);
+        setUserFullName(resolvedFullName);
+        setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
+        setUserEmail(resolvedEmail);
       } else if (event === "SIGNED_OUT") {
         setShowLogin(true);
         setUserName("Guest");
