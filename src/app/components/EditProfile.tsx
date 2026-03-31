@@ -115,18 +115,43 @@ export function EditProfile({
     if (!validateForm()) return;
 
     setIsLoading(true);
+    const loadingToast = toast.loading("Saving changes...");
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const { updateProfile } = await import("../../lib/auth");
+      
+      // 1. Sync with public.profiles table
+      const { error } = await updateProfile({
+        full_name: formData.fullName,
+        username: formData.username,
+        email: formData.email,
+        date_of_birth: formData.dateOfBirth,
+        nationality: formData.nationality,
+        phone_number: formData.phoneNumber,
+        country: formData.country,
+        city: formData.city,
+        occupation: formData.occupation,
+        bio: formData.bio,
+        avatar_url: userAvatar // Ensure latest avatar is saved
+      });
 
-    setIsLoading(false);
-    setHasChanges(false);
-    toast.success("Profile updated successfully");
-    
-    // Wait a bit then navigate back
-    setTimeout(() => {
-      onBack();
-    }, 500);
+      if (error) throw error;
+
+      toast.dismiss(loadingToast);
+      toast.success("Profile updated successfully");
+      setHasChanges(false);
+      
+      // Wait a bit then navigate back
+      setTimeout(() => {
+        onBack();
+      }, 500);
+    } catch (error: any) {
+      console.error("Save error:", error);
+      toast.dismiss(loadingToast);
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

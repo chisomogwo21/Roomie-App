@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Heart, MapPin, Briefcase, Home, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Heart, Info, MapPin, Briefcase, Home, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 
 interface RoommateProfile {
   id: string;
@@ -19,9 +19,10 @@ interface MatchCardProps {
   profile: RoommateProfile;
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
+  onInfoClick: () => void;
 }
 
-export function MatchCard({ profile, onSwipeLeft, onSwipeRight }: MatchCardProps) {
+export function MatchCard({ profile, onSwipeLeft, onSwipeRight, onInfoClick }: MatchCardProps) {
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -238,18 +239,35 @@ export function MatchCard({ profile, onSwipeLeft, onSwipeRight }: MatchCardProps
         </div>
 
         {/* Action Buttons */}
-        <div className="absolute bottom-[20px] left-[20px] right-[20px] flex gap-[16px] justify-center">
+        <div className="absolute bottom-[20px] left-[20px] right-[20px] flex gap-[16px] justify-center items-center">
           <button
-            onClick={onSwipeLeft}
-            className="w-[64px] h-[64px] bg-white rounded-full shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] flex items-center justify-center border-[2px] border-[#e5e7eb] hover:border-[#ff4444] hover:bg-[#fff5f5] transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSwipeLeft();
+            }}
+            className="w-[52px] h-[52px] bg-white rounded-full shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] flex items-center justify-center border-[2px] border-[#e5e7eb] hover:border-[#ff4444] hover:bg-[#fff5f5] transition-all"
           >
-            <X className="w-[32px] h-[32px] text-[#ff4444]" strokeWidth={2.5} />
+            <X className="w-[26px] h-[26px] text-[#ff4444]" strokeWidth={2.5} />
           </button>
+          
           <button
-            onClick={onSwipeRight}
-            className="w-[72px] h-[72px] bg-[#fe456a] rounded-full shadow-[0px_8px_16px_0px_rgba(254,69,106,0.3)] flex items-center justify-center hover:bg-[#e63d5f] transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSwipeRight();
+            }}
+            className="w-[64px] h-[64px] bg-[#fe456a] rounded-full shadow-[0px_8px_16px_0px_rgba(254,69,106,0.3)] flex items-center justify-center hover:bg-[#e63d5f] transition-all"
           >
-            <Heart className="w-[36px] h-[36px] text-white" strokeWidth={2.5} fill="white" />
+            <Heart className="w-[32px] h-[32px] text-white" strokeWidth={2.5} fill="white" />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onInfoClick();
+            }}
+            className="w-[52px] h-[52px] bg-white rounded-full shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] flex items-center justify-center border-[2px] border-[#e5e7eb] hover:border-[#22c55e] hover:bg-[#f0fdf4] transition-all"
+          >
+            <Info className="w-[26px] h-[26px] text-[#22c55e]" strokeWidth={2.5} />
           </button>
         </div>
       </div>

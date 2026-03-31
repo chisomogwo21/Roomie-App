@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 interface PublicProfileViewProps {
   onBack: () => void;
+  userId?: string;
   connectionStatus?: "pending" | "matched" | "not-connected";
   onChat?: () => void;
   onSendRequest?: () => void;

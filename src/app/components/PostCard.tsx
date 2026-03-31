@@ -11,6 +11,7 @@ interface Comment {
 
 interface PostCardProps {
   id: string;
+  userId?: string;
   userName: string;
   userAvatar: string;
   location: string;
@@ -18,9 +19,11 @@ interface PostCardProps {
   text: string;
   tags?: string[];
   matchScore?: "high" | "medium" | null;
+  onViewProfile?: (userId: string) => void;
 }
 
 export function PostCard({
+  userId,
   userName,
   userAvatar,
   location,
@@ -28,6 +31,7 @@ export function PostCard({
   text,
   tags = [],
   matchScore = null,
+  onViewProfile,
 }: PostCardProps) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -86,15 +90,25 @@ export function PostCard({
 
       {/* User Info */}
       <div className="flex items-start gap-3 mb-3">
-        <img
-          src={userAvatar}
-          alt={userName}
-          className="w-[44px] h-[44px] rounded-full object-cover"
-        />
+        <button
+          onClick={() => userId && onViewProfile?.(userId)}
+          className="flex-shrink-0 transition-transform active:scale-95"
+        >
+          <img
+            src={userAvatar}
+            alt={userName}
+            className="w-[44px] h-[44px] rounded-full object-cover border border-[#e5e7eb]"
+          />
+        </button>
         <div className="flex-1 min-w-0">
-          <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] text-[#1f2a37] leading-[18px]">
-            {userName}
-          </p>
+          <button
+            onClick={() => userId && onViewProfile?.(userId)}
+            className="text-left hover:text-[#fe456a] transition-colors"
+          >
+            <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] text-[#1f2a37] leading-[18px]">
+              {userName}
+            </p>
+          </button>
           <div className="flex items-center gap-1 mt-0.5">
             <MapPin className="w-[12px] h-[12px] text-[#9da4ae]" />
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[10px] text-[#9da4ae] leading-[14px]">

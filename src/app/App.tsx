@@ -63,6 +63,7 @@ export default function App() {
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
   const [showRentalDetails, setShowRentalDetails] = useState(false);
   const [showPublicProfile, setShowPublicProfile] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showMatching, setShowMatching] = useState(false);
   const [showPreferencesEditor, setShowPreferencesEditor] = useState(false);
   const [showRequestToJoin, setShowRequestToJoin] = useState(false);
@@ -116,6 +117,11 @@ export default function App() {
     localStorage.setItem("userLocation", loc);
   };
 
+  const handleViewProfile = (userId: string) => {
+    setSelectedUserId(userId);
+    setShowPublicProfile(true);
+  };
+
   useEffect(() => {
     // Check for existing session on mount
     const checkSession = async () => {
@@ -135,26 +141,51 @@ export default function App() {
       if (session) {
         setShowLogin(false);
         setActiveTab("home");
-        const fullName = session.user?.user_metadata?.full_name || "";
-        setUserName(fullName.split(" ")[0] || "Roomie");
-        setUserFullName(fullName);
+        
+        // Fetch extended profile data from profiles table
+        const { getProfile } = await import("../lib/auth");
+        const { data: profile } = await getProfile(session.user.id);
+        
+        if (profile) {
+          setUserName(profile.full_name?.split(" ")[0] || "Roomie");
+          setUserFullName(profile.full_name || "");
+          setUserAvatar(profile.avatar_url || "");
+        } else {
+          // Fallback to metadata
+          const fullName = session.user?.user_metadata?.full_name || "";
+          setUserName(fullName.split(" ")[0] || "Roomie");
+          setUserFullName(fullName);
+          setUserAvatar(session.user?.user_metadata?.avatar_url || "");
+        }
         setUserEmail(session.user?.email || "");
-        setUserAvatar(session.user?.user_metadata?.avatar_url || "");
       }
     };
     checkSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
         setShowLogin(false);
         setShowSignUp(false);
         setActiveTab("home");
-        const fullName = session.user?.user_metadata?.full_name || "";
-        setUserName(fullName.split(" ")[0] || "Roomie");
-        setUserFullName(fullName);
-        setUserEmail(session.user?.email || "");
-        setUserAvatar(session.user?.user_metadata?.avatar_url || "");
+        
+        // Fetch extended profile data from profiles table
+        const { getProfile } = await import("../lib/auth");
+        const { data: profile } = await getProfile(session.user.id);
+        
+        if (profile) {
+          setUserName(profile.full_name?.split(" ")[0] || "Roomie");
+          setUserFullName(profile.full_name || "");
+          setUserAvatar(profile.avatar_url || "");
+          setUserEmail(profile.email || session.user.email);
+        } else {
+          // Fallback to metadata
+          const fullName = session.user?.user_metadata?.full_name || "";
+          setUserName(fullName.split(" ")[0] || "Roomie");
+          setUserFullName(fullName);
+          setUserAvatar(session.user?.user_metadata?.avatar_url || "");
+          setUserEmail(session.user?.email || "");
+        }
       } else if (event === "SIGNED_OUT") {
         setShowLogin(true);
         setUserName("Guest");
@@ -614,23 +645,27 @@ export default function App() {
 
   // If matching is active, show it
   if (showMatching) {
-    return <RoommateMatching onBack={() => setShowMatching(false)} />;
+    return <RoommateMatching onBack={() => setShowMatching(false)} onViewProfile={handleViewProfile} />;
   }
 
   // If public profile is active, show it
   if (showPublicProfile) {
     return (
       <PublicProfileView
-        onBack={() => setShowPublicProfile(false)}
+        onBack={() => {
+          setShowPublicProfile(false);
+          setSelectedUserId(null);
+        }}
+        userId={selectedUserId || undefined}
         connectionStatus="not-connected"
         onChat={() => {
           setShowPublicProfile(false);
           setCurrentChatStatus("accepted");
-          setCurrentChatRecipientId("");
+          setCurrentChatRecipientId(selectedUserId || "");
           setShowChatThread(true);
         }}
         onSendRequest={() => {
-          console.log("Send connection request");
+          console.log("Send connection request to:", selectedUserId);
           setShowPublicProfile(false);
         }}
       />
@@ -667,11 +702,7 @@ export default function App() {
           setBookingRequestType("shared");
           setShowBookingRequest(true);
         }}
-        onViewProfile={(userId) => {
-          console.log("View profile:", userId);
-          setShowPropertyDetails(false);
-          setShowPublicProfile(true);
-        }}
+        onViewProfile={handleViewProfile}
       />
     );
   }
@@ -804,7 +835,7 @@ export default function App() {
           />
         )}
         {activeTab === "community" && (
-          <CommunityFeed />
+          <CommunityFeed onViewProfile={handleViewProfile} />
         )}
         {activeTab === "explore" && (
           <Explore 

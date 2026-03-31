@@ -17,14 +17,55 @@ interface RoommateProfile {
   bio: string;
 }
 
-// Mock data removed for production
-const MOCK_PROFILES: RoommateProfile[] = [];
+// Mock data re-added for testing profile access and info button
+const MOCK_PROFILES: RoommateProfile[] = [
+  {
+    id: "1",
+    photoUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop",
+    firstName: "Amara",
+    age: "24",
+    occupation: "UX Designer",
+    livingSetup: "Looking for a Roommate",
+    location: "Kigali, Rwanda",
+    compatibilityScore: 94,
+    lifestyleTags: ["Early Bird", "Non-smoker", "Clean & Tidy"],
+    matchingTags: ["Interior Design", "Hiking", "Cooking"],
+    bio: "Hey! I'm a UX designer looking for a friendly roommate to share an apartment in Kigali. I love a clean living space and enjoy weekend hikes. I usually cook at home and value a quiet environment during work hours."
+  },
+  {
+    id: "2",
+    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1000&fit=crop",
+    firstName: "David",
+    age: "27",
+    occupation: "Software Engineer",
+    livingSetup: "Room Available",
+    location: "Kigali, Rwanda",
+    compatibilityScore: 88,
+    lifestyleTags: ["Night Owl", "Pet Friendly", "Social"],
+    matchingTags: ["Gaming", "Code", "Music"],
+    bio: "Hi there! I have an extra room in my 2-bedroom apartment. I work as a devs and spend most of my time coding or gaming. I'm social but respect personal space. If you like tech and music, we'll get along great!"
+  },
+  {
+    id: "3",
+    photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&h=1000&fit=crop",
+    firstName: "Elena",
+    age: "25",
+    occupation: "Marketing Lead",
+    livingSetup: "Looking for a Roommate",
+    location: "Kigali, Rwanda",
+    compatibilityScore: 91,
+    lifestyleTags: ["Coffee Lover", "Yoga", "Organized"],
+    matchingTags: ["Travel", "Photography", "Art"],
+    bio: "I'm Elena, a marketing lead at a local startup. Looking for a roommate who is also organized and values a peaceful home. I do yoga every morning and love exploring local art galleries on weekends. Let's connect!"
+  }
+];
 
 interface RoommateMatchingProps {
   onBack: () => void;
+  onViewProfile?: (userId: string) => void;
 }
 
-export function RoommateMatching({ onBack }: RoommateMatchingProps) {
+export function RoommateMatching({ onBack, onViewProfile }: RoommateMatchingProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipedProfiles, setSwipedProfiles] = useState<string[]>([]);
   const [matchedProfile, setMatchedProfile] = useState<RoommateProfile | null>(null);
@@ -104,6 +145,7 @@ export function RoommateMatching({ onBack }: RoommateMatchingProps) {
             profile={currentProfile}
             onSwipeLeft={() => handleSwipe("left")}
             onSwipeRight={() => handleSwipe("right")}
+            onInfoClick={() => onViewProfile?.(currentProfile.id)}
           />
         ) : (
           <div className="size-full flex flex-col items-center justify-center px-[32px]">

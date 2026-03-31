@@ -309,23 +309,35 @@ export function Home({
           ) : properties.filter(h => h.location.includes(selectedTopLocation)).length === 0 ? (
             <p className="text-sm text-[#6b7280] px-6 w-full text-center">No properties found in {selectedTopLocation}.</p>
           ) : (
-            properties.filter(h => h.location.includes(selectedTopLocation)).map((home) => (
+            properties.filter(h => !selectedTopLocation || h.location.includes(selectedTopLocation)).map((home) => (
               <button
                 key={home.id}
                 onClick={() => onViewListing && onViewListing({
-                  intent: "rental",
-                  livingSetup: "entire-apartment",
-                  existingRoommates: [],
-                  spaceDetails: { bedrooms: "1", bathrooms: "1", furnished: true, privateBathroom: true, utilitiesIncluded: true },
-                  locationDetails: { country: "Rwanda", city: "Kigali", area: home.location, address: home.location, hideAddress: false },
-                  idealFor: [],
-                  nearbyFacilities: [],
-                  rent: home.price.toString(),
-                  deposit: home.price.toString(),
-                  moveInDate: "2026-04-01",
-                  minimumStay: "6-months",
-                  photos: [home.image_url],
-                  description: home.title
+                  intent: home.intent || "rental",
+                  livingSetup: home.living_setup || "entire-apartment",
+                  existingRoommates: [], // To be fetched if needed
+                  spaceDetails: { 
+                    bedrooms: home.bedrooms || "1", 
+                    bathrooms: home.bathrooms || "1", 
+                    furnished: home.furnished, 
+                    privateBathroom: home.private_bathroom, 
+                    utilitiesIncluded: home.utilities_included 
+                  },
+                  locationDetails: { 
+                    country: home.country || "Rwanda", 
+                    city: home.city || "Kigali", 
+                    area: home.area || home.location, 
+                    address: home.address || home.location, 
+                    hideAddress: home.hide_address 
+                  },
+                  idealFor: home.ideal_for || [],
+                  nearbyFacilities: home.nearby_facilities || [],
+                  rent: (home.rent || home.price).toString(),
+                  deposit: (home.deposit || home.price).toString(),
+                  moveInDate: home.move_in_date || "2026-04-01",
+                  minimumStay: home.minimum_stay || "6-months",
+                  photos: home.images || [home.image_url],
+                  description: home.description || home.title
                 })}
                 className="flex-none w-[160px] bg-[#fafafa] rounded-[12px] overflow-hidden hover:bg-[#f3f4f6] transition-colors text-left"
               >
@@ -339,7 +351,7 @@ export function Home({
                 <div className="p-[12px]">
                   {/* Listing type label */}
                   <p className="font-['Inter:Regular',sans-serif] font-normal text-[9px] leading-[12px] text-[#9da4ae] mb-[4px]">
-                    Property
+                    {home.intent === 'roommate' ? 'Looking for Roomie' : 'Property'}
                   </p>
                   <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] leading-[18px] text-[#1f2a37] mb-[4px] truncate">
                     {home.title}

@@ -439,23 +439,26 @@ export function PropertyDetails({
               Listing Owner
             </h2>
 
-            <div className="bg-white border border-[#e5e7eb] rounded-[12px] p-[16px] shadow-[0px_1px_2px_rgba(0,0,0,0.05)]">
-              <div className="flex items-center gap-[12px] mb-[12px]">
-                {/* Avatar */}
-                <div className="flex-none w-[48px] h-[48px] rounded-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center">
-                  <User className="w-[24px] h-[24px] text-white" strokeWidth={2} />
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[15px] leading-[20px] text-[#1f2a37] mb-[2px]">
-                    Sarah Johnson
-                  </h3>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal text-[13px] leading-[18px] text-[#6b7280]">
-                    Listing Owner
-                  </p>
-                </div>
+          <div className="bg-white border border-[#e5e7eb] rounded-[12px] p-[16px] shadow-[0px_1px_2px_rgba(0,0,0,0.05)]">
+            <button
+              onClick={() => onViewProfile?.("owner-id")} // TODO: Use real owner ID
+              className="flex items-center gap-[12px] mb-[12px] w-full hover:bg-[#f9fafb] p-1 rounded-[8px] transition-colors text-left"
+            >
+              {/* Avatar */}
+              <div className="flex-none w-[48px] h-[48px] rounded-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center">
+                <User className="w-[24px] h-[24px] text-white" strokeWidth={2} />
               </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[15px] leading-[20px] text-[#1f2a37] mb-[2px]">
+                  Sarah Johnson
+                </h3>
+                <p className="font-['Inter:Regular',sans-serif] font-normal text-[13px] leading-[18px] text-[#6b7280]">
+                  Listing Owner
+                </p>
+              </div>
+            </button>
 
               {/* Privacy Message */}
               <div className="bg-[#fef0f3] border border-[#fecdd3] rounded-[8px] p-[12px] flex items-start gap-[8px]">

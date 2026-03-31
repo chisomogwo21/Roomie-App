@@ -4,9 +4,11 @@ import { FilterModal } from "./FilterModal";
 
 interface ExploreProps {
   onSelectCity?: (cityName: string) => void;
+  onViewListing?: () => void;
+  onViewProfile?: () => void;
 }
 
-export function Explore({ onSelectCity }: ExploreProps) {
+export function Explore({ onSelectCity, onViewListing, onViewProfile }: ExploreProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
 

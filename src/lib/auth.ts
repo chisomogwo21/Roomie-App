@@ -95,3 +95,38 @@ export async function updatePassword(password: string) {
   });
   return { data, error };
 }
+
+/**
+ * Update the user's public profile in the profiles table.
+ */
+export async function updateProfile(profileData: any) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    throw new Error('You must be logged in to update your profile.');
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert({
+      id: user.id,
+      ...profileData,
+      updated_at: new Date().toISOString(),
+    })
+    .select();
+
+  return { data: data ? data[0] : null, error };
+}
+
+/**
+ * Get a user's public profile.
+ */
+export async function getProfile(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  return { data, error };
+}

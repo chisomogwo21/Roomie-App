@@ -11,6 +11,7 @@ interface PhotosAndPublishProps {
 export function PhotosAndPublish({ onPublish }: PhotosAndPublishProps) {
   const { listingData, updatePhotosAndDescription, resetListing } = useCreateListing();
   const [description, setDescription] = useState(listingData.description);
+  const [photos, setPhotos] = useState<File[]>([]);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -19,9 +20,11 @@ export function PhotosAndPublish({ onPublish }: PhotosAndPublishProps) {
   const remainingChars = maxDescriptionLength - description.length;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const fileArray = Array.from(files);
+    const filesInput = e.target.files;
+    if (filesInput) {
+      const fileArray = Array.from(filesInput);
+      setPhotos((prev) => [...prev, ...fileArray]);
+      
       // Create preview URLs
       const urls = fileArray.map((file) => URL.createObjectURL(file));
       setPhotoUrls((prev) => [...prev, ...urls]);
@@ -29,18 +32,20 @@ export function PhotosAndPublish({ onPublish }: PhotosAndPublishProps) {
   };
 
   const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
     setPhotoUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handlePublish = async () => {
     setLoading(true);
     try {
-      // 1. Update the description in context
-      updatePhotosAndDescription([], description);
+      // 1. Update context with description and latest photos
+      updatePhotosAndDescription(photos, description);
       
-      // 2. Call Supabase
+      // 2. Call Supabase with the combined data
       const { data, error } = await createProperty({
         ...listingData,
+        photos, // Ensure actual files are sent
         description
       });
 
