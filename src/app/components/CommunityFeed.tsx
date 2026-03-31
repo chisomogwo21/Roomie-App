@@ -4,6 +4,7 @@ import { PostCard } from "./PostCard";
 import { CreatePostModal } from "./CreatePostModal";
 import { EmptyState } from "./EmptyState";
 import { toast } from "sonner";
+import { MOCK_PROFILES as SHARED_MOCK_PROFILES } from "../../lib/mockData";
 
 const FILTER_CATEGORIES = [
   "All",
@@ -14,41 +15,18 @@ const FILTER_CATEGORIES = [
 ];
 
 // Mock data for posts re-added for testing profile access
-const MOCK_POSTS: any[] = [
-  {
-    id: "101",
-    userId: "user-101",
-    userName: "Marcus",
-    userAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
+const MOCK_POSTS: any[] = SHARED_MOCK_PROFILES.filter(p => ["user-101", "user-102", "user-103"].includes(p.id))
+  .map(p => ({
+    id: `post-${p.id}`,
+    userId: p.id,
+    userName: p.name,
+    userAvatar: p.photoUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
     location: "Kigali, Nyarugenge",
     timestamp: "2h ago",
-    text: "I'm looking for a shared apartment in Nyarugenge! My budget is around $200/month. I'm a quiet professional, non-smoker, and very clean.",
-    tags: ["Looking for Roommate", "Budget $200"],
-    matchScore: "high",
-  },
-  {
-    id: "102",
-    userId: "user-102",
-    userName: "Sandra",
-    userAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
-    location: "Kigali, Kimironko",
-    timestamp: "5h ago",
-    text: "I have an extra room available in Kimironko starting next month. Beautiful 3BR house with a garden. Ideal for 1-2 people! Message me for details.",
-    tags: ["Room Available", "Kigali"],
-    matchScore: "medium",
-  },
-  {
-    id: "103",
-    userId: "user-103",
-    userName: "Jean",
-    userAvatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop",
-    location: "Kigali, Kacyiru",
-    timestamp: "1d ago",
-    text: "Does anyone have tips for finding reliable roommates in Kacyiru? Just moving there and want to make sure I find a good match.",
-    tags: ["Tips & Advice"],
-    matchScore: null,
-  }
-];
+    text: p.bio,
+    tags: p.lifestyleTags,
+    matchScore: Math.random() > 0.5 ? "high" : "medium",
+  }));
 
 interface CommunityFeedProps {
   onBack?: () => void;

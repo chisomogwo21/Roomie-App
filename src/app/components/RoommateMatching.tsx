@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { MatchCard } from "./MatchCard";
 import { MatchConfirmation } from "./MatchConfirmation";
+import { MOCK_PROFILES as SHARED_MOCK_PROFILES } from "../../lib/mockData";
 
 interface RoommateProfile {
   id: string;
@@ -18,47 +19,20 @@ interface RoommateProfile {
 }
 
 // Mock data re-added for testing profile access and info button
-const MOCK_PROFILES: RoommateProfile[] = [
-  {
-    id: "1",
-    photoUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop",
-    firstName: "Amara",
-    age: "24",
-    occupation: "UX Designer",
-    livingSetup: "Looking for a Roommate",
-    location: "Kigali, Rwanda",
-    compatibilityScore: 94,
-    lifestyleTags: ["Early Bird", "Non-smoker", "Clean & Tidy"],
-    matchingTags: ["Interior Design", "Hiking", "Cooking"],
-    bio: "Hey! I'm a UX designer looking for a friendly roommate to share an apartment in Kigali. I love a clean living space and enjoy weekend hikes. I usually cook at home and value a quiet environment during work hours."
-  },
-  {
-    id: "2",
-    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1000&fit=crop",
-    firstName: "David",
-    age: "27",
-    occupation: "Software Engineer",
-    livingSetup: "Room Available",
-    location: "Kigali, Rwanda",
-    compatibilityScore: 88,
-    lifestyleTags: ["Night Owl", "Pet Friendly", "Social"],
-    matchingTags: ["Gaming", "Code", "Music"],
-    bio: "Hi there! I have an extra room in my 2-bedroom apartment. I work as a devs and spend most of my time coding or gaming. I'm social but respect personal space. If you like tech and music, we'll get along great!"
-  },
-  {
-    id: "3",
-    photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&h=1000&fit=crop",
-    firstName: "Elena",
-    age: "25",
-    occupation: "Marketing Lead",
-    livingSetup: "Looking for a Roommate",
-    location: "Kigali, Rwanda",
-    compatibilityScore: 91,
-    lifestyleTags: ["Coffee Lover", "Yoga", "Organized"],
-    matchingTags: ["Travel", "Photography", "Art"],
-    bio: "I'm Elena, a marketing lead at a local startup. Looking for a roommate who is also organized and values a peaceful home. I do yoga every morning and love exploring local art galleries on weekends. Let's connect!"
-  }
-];
+const MOCK_PROFILES: RoommateProfile[] = SHARED_MOCK_PROFILES.filter(p => ["1", "2", "3"].includes(p.id))
+  .map(p => ({
+    id: p.id,
+    firstName: p.name,
+    age: p.age,
+    occupation: p.occupation,
+    location: p.location,
+    photoUrl: p.photoUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&h=1000&fit=crop",
+    compatibilityScore: p.compatibilityScore || 0,
+    lifestyleTags: p.lifestyleTags,
+    matchingTags: p.lifestyleTags.slice(0, 3), // Simple mapping for demo
+    bio: p.bio,
+    livingSetup: p.lookingFor || "Looking for a Roommate"
+  }));
 
 interface RoommateMatchingProps {
   onBack: () => void;

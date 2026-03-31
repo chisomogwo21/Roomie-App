@@ -661,6 +661,10 @@ export default function App() {
 
   // If public profile is active, show it
   if (showPublicProfile) {
+    // For demo purposes: if the user is in the matching pool (1, 2, or 3), show as 'matched'
+    // to match the user's second screenshot requirement.
+    const isMatched = selectedUserId ? ["1", "2", "3"].includes(selectedUserId) : false;
+
     return (
       <PublicProfileView
         onBack={() => {
@@ -668,7 +672,7 @@ export default function App() {
           setSelectedUserId(null);
         }}
         userId={selectedUserId || undefined}
-        connectionStatus="not-connected"
+        connectionStatus={isMatched ? "matched" : "not-connected"}
         onChat={() => {
           setShowPublicProfile(false);
           setCurrentChatStatus("accepted");

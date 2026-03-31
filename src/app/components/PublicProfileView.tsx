@@ -1,6 +1,7 @@
 import { ArrowLeft, MapPin, User, MessageCircle, UserPlus, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getProfileById } from "../../lib/mockData";
 
 interface PublicProfileViewProps {
   onBack: () => void;
@@ -12,24 +13,15 @@ interface PublicProfileViewProps {
 
 export function PublicProfileView({ 
   onBack, 
+  userId,
   connectionStatus = "not-connected",
   onChat,
   onSendRequest,
 }: PublicProfileViewProps) {
   const [loading, setLoading] = useState(false);
 
-  // Demo data
-  const profileData = {
-    photoUrl: null,
-    name: "Alex Rivera",
-    ageRange: "25-29",
-    occupation: "Software Engineer",
-    location: "Kigali, Rwanda",
-    bio: "Love cooking and exploring new cafes. Usually working from home during the week. Looking for a clean, quiet place with friendly roommates who respect personal space but also enjoy occasional hangouts.",
-    lifestyleTags: ["Clean", "Quiet", "WFH", "Foodie", "Early Bird"],
-    lookingFor: "Roommate",
-    preferredMoveIn: "Flexible",
-  };
+  // Dynamic data based on userId
+  const profileData = getProfileById(userId);
 
   const getStatusBadge = () => {
     switch (connectionStatus) {
@@ -48,6 +40,7 @@ export function PublicProfileView({
           border: "border-[#a7f3d0]",
         };
       case "not-connected":
+        default:
         return {
           label: "Not Connected",
           bg: "bg-[#f3f4f6]",
@@ -101,9 +94,15 @@ export function PublicProfileView({
         <div className="px-[24px] pt-[24px]">
           {/* Avatar */}
           <div className="flex justify-center mb-[16px]">
-            <div className="w-[120px] h-[120px] rounded-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center">
-              <User className="w-[60px] h-[60px] text-white" strokeWidth={2} />
-            </div>
+            {profileData.photoUrl ? (
+              <div className="w-[120px] h-[120px] rounded-full border-[4px] border-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] overflow-hidden">
+                <img src={profileData.photoUrl} alt={profileData.name} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-[120px] h-[120px] rounded-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center">
+                <User className="w-[60px] h-[60px] text-white" strokeWidth={2} />
+              </div>
+            )}
           </div>
 
           {/* Name & Basic Info */}
@@ -112,7 +111,7 @@ export function PublicProfileView({
               {profileData.name}
             </h1>
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[20px] text-[#6b7280] mb-[2px]">
-              {profileData.ageRange} • {profileData.occupation}
+              {profileData.age} • {profileData.occupation}
             </p>
             <div className="flex items-center justify-center gap-[4px] text-[#9da4ae]">
               <MapPin className="w-[14px] h-[14px]" />
