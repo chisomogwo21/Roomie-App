@@ -128,11 +128,24 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Timeout safety fallback: ensure loading screen disappears after 5 seconds
+    const timeoutId = setTimeout(() => {
+      setIsInitializing(prev => {
+        if (prev) {
+          console.warn("Initialization took too long, engaging timeout fallback.");
+          return false;
+        }
+        return prev;
+      });
+    }, 5000);
+
     // Check for existing session on mount
     const checkSession = async () => {
       try {
-        const { data: { session } } = await getSession();
+        const { data: { session }, error: sessionError } = await getSession();
         
+        if (sessionError) throw sessionError;
+
         // Handle password reset recovery link
         const hash = window.location.hash;
         if (hash && hash.includes("type=recovery")) {
@@ -145,52 +158,63 @@ export default function App() {
         }
 
         if (session) {
-        setShowLogin(false);
-        setActiveTab("home");
-        
-        // Fetch extended profile data from profiles table
-        const { getProfile } = await import("../lib/auth");
-        const { data: profile } = await getProfile(session.user.id);
-        
-        let resolvedFullName = "";
-        let resolvedEmail = session.user?.email || "";
-        let resolvedAvatar = "";
+          setShowLogin(false);
+          setActiveTab("home");
+          
+          // Fetch extended profile data from profiles table
+          const { getProfile } = await import("../lib/auth");
+          const { data: profile, error: profileError } = await getProfile(session.user.id);
+          
+          if (profileError) {
+            console.warn("Could not fetch profile details, using session metadata fallback.");
+          }
 
-        if (profile) {
-          resolvedFullName = profile.full_name || "";
-          resolvedAvatar = profile.avatar_url || "";
-          resolvedEmail = profile.email || resolvedEmail;
+          let resolvedFullName = "";
+          let resolvedEmail = session.user?.email || "";
+          let resolvedAvatar = "";
+
+          if (profile) {
+            resolvedFullName = profile.full_name || "";
+            resolvedAvatar = profile.avatar_url || "";
+            resolvedEmail = profile.email || resolvedEmail;
+          }
+
+          // Fallback sequence for name
+          if (!resolvedFullName) {
+            resolvedFullName = session.user?.user_metadata?.full_name || 
+                              session.user?.user_metadata?.username || 
+                              "";
+          }
+
+          // Final fallback: derive from email if no name at all
+          if (!resolvedFullName && resolvedEmail) {
+            const emailPrefix = resolvedEmail.split("@")[0];
+            resolvedFullName = emailPrefix
+              .split(/[\._]/)
+              .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+              .join(" ");
+          }
+
+          const firstName = resolvedFullName.split(" ")[0] || "Roomie";
+          
+          setUserName(firstName);
+          setUserFullName(resolvedFullName);
+          setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
+          setUserEmail(resolvedEmail);
+        } else {
+          // No session, show login
+          setShowLogin(true);
         }
-
-        // Fallback sequence for name
-        if (!resolvedFullName) {
-          resolvedFullName = session.user?.user_metadata?.full_name || 
-                            session.user?.user_metadata?.username || 
-                            "";
-        }
-
-        // Final fallback: derive from email if no name at all
-        if (!resolvedFullName && resolvedEmail) {
-          const emailPrefix = resolvedEmail.split("@")[0];
-          resolvedFullName = emailPrefix
-            .split(/[\._]/)
-            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(" ");
-        }
-
-        const firstName = resolvedFullName.split(" ")[0] || "Roomie";
-        
-        setUserName(firstName);
-        setUserFullName(resolvedFullName);
-        setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
-        setUserEmail(resolvedEmail);
+      } catch (err) {
+        console.error("Initialization error:", err);
+        // Ensure app still loads even if auth check fails
+        setShowLogin(true);
+      } finally {
+        setIsInitializing(false);
+        clearTimeout(timeoutId);
       }
-    } catch (err) {
-      console.error("Initialization error:", err);
-    } finally {
-      setIsInitializing(false);
-    }
     };
+
     checkSession();
 
     // Listen for auth changes
@@ -247,6 +271,7 @@ export default function App() {
 
     return () => {
       subscription.unsubscribe();
+      clearTimeout(timeoutId);
     };
   }, []);
 
