@@ -12,22 +12,31 @@ export function MyListing({ onCreateListing }: MyListingProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     async function loadListings() {
       setLoading(true);
       try {
         const { data, error } = await fetchMyProperties();
+        if (!isMounted) return;
+        
         if (error) {
           toast.error("Failed to load your listings.");
         } else {
-          setProperties(data || []);
+          // Filter out any potential duplicates by ID just to be safe
+          const uniqueProperties = (data || []).filter((prop, index, self) => 
+            index === self.findIndex((p) => p.id === prop.id)
+          );
+          setProperties(uniqueProperties);
         }
       } catch (err: any) {
+        if (!isMounted) return;
         toast.error(err.message || "Failed to load your listings.");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
     loadListings();
+    return () => { isMounted = false; };
   }, []);
 
   return (

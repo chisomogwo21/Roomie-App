@@ -1,14 +1,13 @@
 import { ArrowLeft, Share, Heart, Home, Bed, Bath, Sofa, Calendar, MapPin, User, Hospital, ShoppingCart, ShoppingBag, Fuel, Bus, GraduationCap, Dumbbell, Plus, Cross, Coffee } from "lucide-react";
 import { useState } from "react";
-import type { ListingData } from "./CreateListingContext";
 
 interface PropertyDetailsProps {
   onBack: () => void;
-  listing?: ListingData; // Optional for demo/testing
+  listing?: any;
   onRequestToJoin?: () => void;
   onViewProfile?: (userId: string) => void;
   isFavorited?: boolean;
-  onToggleFavorite?: (listing: ListingData) => void;
+  onToggleFavorite?: (listing: any) => void;
 }
 
 export function PropertyDetails({ 
@@ -21,102 +20,47 @@ export function PropertyDetails({
 }: PropertyDetailsProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Demo data for when no listing is provided
-  const demoListing: ListingData = {
-    intent: "roommate",
-    livingSetup: "private-room-apartment",
-    existingRoommates: [
-      {
-        id: "1",
-        photoUrl: null,
-        firstName: "Alex",
-        ageRange: "25-29",
-        occupation: "Software Engineer",
-        lifestyleBadges: ["Clean", "Quiet", "WFH"],
-        bio: "Love cooking and exploring new cafes. Usually working from home during the week.",
-      },
-      {
-        id: "2",
-        photoUrl: null,
-        firstName: "Jordan",
-        ageRange: "25-29",
-        occupation: "Graphic Designer",
-        lifestyleBadges: ["Social", "Active", "Foodie"],
-        bio: "Morning person who loves running and weekend brunches. Friendly and easy-going!",
-      },
-    ],
-    spaceDetails: {
-      bedrooms: "3",
-      bathrooms: "2",
-      furnished: true,
-      privateBathroom: false,
-      utilitiesIncluded: true,
-    },
-    idealFor: ["working-professionals", "quiet-lifestyle"],
-    locationDetails: {
-      country: "Rwanda",
-      city: "Kigali",
-      area: "Kicukiro",
-      address: "Demo Address 123",
-      hideAddress: false,
-    },
-    nearbyFacilities: [
-      { id: "hospital", distance: "close" },
-      { id: "supermarket", distance: "very-close" },
-      { id: "transit", distance: "very-close" },
-    ],
-    rent: "1200",
-    deposit: "1200",
-    moveInDate: "2026-02-15",
-    minimumStay: "6-months",
-    photos: [],
-    description: "Bright and airy apartment in a quiet neighborhood, perfect for professionals. The space has tons of natural light, a modern kitchen, and a cozy living room. Close to public transport and cafes.",
-  };
+  const activeListingData = listing;
 
-  const activeListingData = listing || demoListing;
+  if (!activeListingData) {
+    return (
+      <div className="size-full flex items-center justify-center bg-white">
+        <p className="text-[#6b7280]">Listing details not found.</p>
+      </div>
+    );
+  }
+
+  // Get gallery images
+  const galleryImages = activeListingData.images && activeListingData.images.length > 0 
+    ? activeListingData.images 
+    : [activeListingData.image_url || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"];
 
   // Helper functions
+  const isSharedLiving = () => {
+    return activeListingData.intent === "roommate" || activeListingData.livingSetup === "entire-home-cotenant";
+  };
+
   const getLivingSetupLabel = () => {
     const setupLabels: Record<string, string> = {
-      "private-room-apartment": "Private Room · Shared Apartment",
-      "private-room-house": "Private Room · Shared House",
-      "entire-home-cotenant": "Entire Home",
-      "co-living": "Co-Living Space",
       "entire-apartment": "Entire Apartment",
       "entire-house": "Entire House",
-      "private-room": "Private Room",
       "premium-home": "Premium Home",
+      "entire-home-cotenant": "Entire Home",
     };
-    return setupLabels[activeListingData.livingSetup || ""] || "";
+    return setupLabels[activeListingData.livingSetup || ""] || "Entire Home";
   };
 
   const getIdealForLabel = (id: string) => {
     const labels: Record<string, string> = {
-      students: "Students",
-      "working-professionals": "Working professionals",
-      couples: "Couples",
-      "quiet-lifestyle": "Quiet lifestyle",
-      "social-lifestyle": "Social lifestyle",
+      "student": "Students",
+      "professional": "Professionals",
+      "couple": "Couples",
+      "pet-owner": "Pet Owners",
+      "non-smoker": "Non-smokers",
     };
     return labels[id] || id;
   };
 
-  const isSharedLiving = () => {
-    const sharedTypes = [
-      "private-room-apartment",
-      "private-room-house",
-      "entire-home-cotenant",
-      "co-living",
-      "private-room",
-    ];
-    return sharedTypes.includes(activeListingData.livingSetup || "");
-  };
-
-  const getCTALabel = () => {
-    return activeListingData.intent === "roommate" ? "Request to Join" : "Contact Owner";
-  };
-
-  // Helper function to get facility info
   const getFacilityInfo = (id: string) => {
     const facilities: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
       "hospital": { label: "Hospital", icon: Hospital },
@@ -133,13 +77,9 @@ export function PropertyDetails({
     return facilities[id] || { label: id, icon: MapPin };
   };
 
-  // Placeholder images
-  const placeholderImages = [
-    "https://images.unsplash.com/photo-1662454419736-de132ff75638?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBiZWRyb29tfGVufDF8fHx8MTc2OTM2NzE0N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    "https://images.unsplash.com/photo-1713352533011-601ad0689860?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3p5JTIwbGl2aW5nJTIwcm9vbSUyMGRlY29yfGVufDF8fHx8MTc2OTQ2MDUxOXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    "https://images.unsplash.com/photo-1597497522150-2f50bffea452?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcGFydG1lbnQlMjBraXRjaGVuJTIwbW9kZXJufGVufDF8fHx8MTc2OTM5MTM0NXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    "https://images.unsplash.com/photo-1611095459865-47682ae3c41c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3p5JTIwYmVkcm9vbSUyMGludGVyaW9yfGVufDF8fHx8MTc2OTQ1NDcyMHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-  ];
+  const getCTALabel = () => {
+    return activeListingData.intent === "roommate" ? "Request to Join" : "Rent Now";
+  };
 
   return (
     <div className="size-full flex flex-col bg-white overflow-auto">
@@ -182,7 +122,7 @@ export function PropertyDetails({
           {/* Main Image */}
           <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden bg-[#f3f4f6] mb-[12px]">
             <img
-              src={placeholderImages[currentImageIndex]}
+              src={galleryImages[currentImageIndex]}
               alt="Property"
               className="w-full h-full object-cover"
             />
@@ -190,7 +130,7 @@ export function PropertyDetails({
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
             {/* Image indicators */}
             <div className="absolute bottom-[16px] left-1/2 -translate-x-1/2 flex gap-[8px]">
-              {placeholderImages.map((_, index) => (
+              {galleryImages.map((_: any, index: number) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
@@ -204,7 +144,7 @@ export function PropertyDetails({
 
           {/* Thumbnail Images */}
           <div className="flex gap-[8px] overflow-x-auto pb-[2px]">
-            {placeholderImages.map((img, index) => (
+            {galleryImages.map((img: string, index: number) => (
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
@@ -212,7 +152,7 @@ export function PropertyDetails({
                   index === currentImageIndex ? "border-[#fe456a]" : "border-transparent"
                 }`}
               >
-                <img src={img} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                <img src={img || ""} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>
@@ -222,7 +162,7 @@ export function PropertyDetails({
         <div className="px-[24px] pt-[24px]">
           <div className="flex items-start justify-between mb-[4px]">
             <h1 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[20px] leading-[26px] text-[#1f2a37] flex-1">
-              Rose Garden
+              {activeListingData.title}
             </h1>
             <div className="text-right">
               <span className="font-['Inter:Bold',sans-serif] font-bold text-[14px] leading-[18px] text-[#fe456a]">
@@ -238,7 +178,7 @@ export function PropertyDetails({
           <div className="flex items-center gap-[4px] mb-[12px]">
             <MapPin className="w-[16px] h-[16px] text-[#9da4ae]" />
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[18px] text-[#9da4ae]">
-              Kibagabaga
+              {activeListingData.location}
             </p>
           </div>
 
@@ -351,7 +291,7 @@ export function PropertyDetails({
 
             {/* Horizontal scroll of roommate cards */}
             <div className="flex gap-[12px] overflow-x-auto pb-[4px] -mx-[24px] px-[24px]">
-              {activeListingData.existingRoommates.map((roommate) => (
+              {activeListingData.existingRoommates.map((roommate: any) => (
                 <button
                   key={roommate.id}
                   onClick={() => onViewProfile?.(roommate.id)}
@@ -377,7 +317,7 @@ export function PropertyDetails({
                   {/* Lifestyle Badges */}
                   {roommate.lifestyleBadges.length > 0 && (
                     <div className="flex flex-wrap gap-[6px] mb-[8px]">
-                      {roommate.lifestyleBadges.map((badge) => (
+                      {roommate.lifestyleBadges.map((badge: string) => (
                         <span
                           key={badge}
                           className="px-[8px] py-[4px] bg-[#fef0f3] text-[#fe456a] rounded-[12px] font-['Inter:Medium',sans-serif] font-medium text-[10px] leading-[14px]"
@@ -408,7 +348,7 @@ export function PropertyDetails({
             </h2>
 
             <div className="flex flex-wrap gap-[8px]">
-              {activeListingData.idealFor.map((item) => (
+              {activeListingData.idealFor.map((item: string) => (
                 <div
                   key={item}
                   className="px-[16px] py-[8px] bg-[#f3f4f6] border border-[#e5e7eb] rounded-[20px]"
@@ -526,7 +466,7 @@ export function PropertyDetails({
           {/* Nearby places chips - only show if facilities were added */}
           {activeListingData.nearbyFacilities.length > 0 && (
             <div className="flex flex-wrap gap-[8px] mb-[16px]">
-              {activeListingData.nearbyFacilities.map((facility) => {
+              {activeListingData.nearbyFacilities.map((facility: any) => {
                 const { label, icon: Icon } = getFacilityInfo(facility.id);
                 return (
                   <div key={facility.id} className="px-[12px] py-[8px] bg-[#f9f5ff] rounded-[8px] flex items-center gap-[6px]">

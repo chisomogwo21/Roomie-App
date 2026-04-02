@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, MapPin, Calendar, Users, Home, Loader2 } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
-import { sendBookingRequest } from "../../lib/requests";
+import { sendBookingRequest, checkExistingRequest } from "../../lib/requests";
 import { toast } from "sonner";
 
 interface Roommate {
@@ -16,6 +16,8 @@ interface Roommate {
 interface BookingRequestProps {
   onBack: () => void;
   listingType: "shared" | "entire";
+  listingId: string;
+  recipientId: string;
   listingData?: {
     title: string;
     coverImage?: string;
@@ -38,6 +40,8 @@ interface BookingRequestProps {
 export function BookingRequest({ 
   onBack, 
   listingType, 
+  listingId,
+  recipientId,
   listingData,
   onSendRequest 
 }: BookingRequestProps) {
@@ -55,29 +59,37 @@ export function BookingRequest({
   const isFormValid = moveInDate && lengthOfStay && budgetConfirmed;
 
   const handleSubmit = async () => {
-    if (isFormValid && onSendRequest) {
+    if (isFormValid) {
       setLoading(true);
       try {
+        // Check for existing request first
+        const { data: existing } = await checkExistingRequest(listingId);
+        if (existing) {
+          toast.error("You have already sent a request for this listing.");
+          return;
+        }
+
         const { error } = await sendBookingRequest({
-          listingId: (listing as any)?.id || "pending",
-          recipientId: (listing as any)?.user_id || "pending",
+          listingId,
+          recipientId,
           moveInDate,
           lengthOfStay,
           budgetConfirmed,
           introMessage
         });
         
-        if (error && error.message !== 'relation "requests" does not exist') {
-           throw error;
-        }
+        if (error) throw error;
 
         toast.success("Request sent successfully!");
-        onSendRequest({
-          moveInDate,
-          lengthOfStay,
-          budgetConfirmed,
-          introMessage
-        });
+        if (onSendRequest) {
+          onSendRequest({
+            moveInDate,
+            lengthOfStay,
+            budgetConfirmed,
+            introMessage
+          });
+        }
+        onBack();
       } catch (err: any) {
         toast.error(err.message || "Failed to send request.");
       } finally {

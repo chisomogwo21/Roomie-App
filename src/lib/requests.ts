@@ -106,3 +106,19 @@ export async function updateRequestStatus(requestId: string, status: 'accepted' 
   
   return { data, error };
 }
+
+/**
+ * Check if a request already exists from the current user for a specific listing
+ */
+export async function checkExistingRequest(listingId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: null };
+
+  const { data, error } = await supabase
+    .from('requests')
+    .select('id, status')
+    .eq('listing_id', listingId)
+    .eq('sender_id', user.id);
+  
+  return { data: data && data.length > 0 ? data[0] : null, error };
+}

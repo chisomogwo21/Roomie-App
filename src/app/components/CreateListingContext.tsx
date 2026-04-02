@@ -44,6 +44,12 @@ export interface NearbyFacility {
 }
 
 export interface ListingData {
+  id?: string;
+  user_id?: string;
+  title?: string;
+  location?: string;
+  image_url?: string;
+  images?: string[];
   intent: ListingIntent;
   livingSetup: LivingSetup;
   existingRoommates: RoommateProfile[];

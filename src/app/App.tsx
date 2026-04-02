@@ -45,6 +45,8 @@ import { RecentViewed } from "./components/RecentViewed";
 import type { RequestStatus } from "./components/RequestStatusBadge";
 import { signOut, getSession } from "../lib/auth";
 import { supabase } from "../lib/supabaseClient";
+import { updateRequestStatus, sendBookingRequest } from "../lib/requests";
+import { toast } from "sonner";
 import type { ListingData } from "./components/CreateListingContext";
 
 export default function App() {
@@ -386,10 +388,12 @@ export default function App() {
       <BookingRequest
         onBack={() => setShowBookingRequest(false)}
         listingType={bookingRequestType}
-        onSendRequest={(requestData) => {
-          console.log("Request sent:", requestData);
+        listingId={currentListing?.id || ""}
+        recipientId={currentListing?.user_id || ""}
+        listingData={currentListing as any}
+        onSendRequest={() => {
           setShowBookingRequest(false);
-          // Optionally show a success message or navigate to RequestToJoin with pending status
+          // Show a success message or navigate to RequestToJoin with pending status
           setDemoRequestStatus("pending");
           setShowRequestToJoin(true);
         }}
@@ -407,15 +411,27 @@ export default function App() {
         }}
         requestType={currentRequestType}
         requestId={currentRequestId}
-        onAccept={() => {
-          console.log("Request accepted:", currentRequestId);
-          setShowRequestDetail(false);
-          setShowRequestsInbox(true);
+        onAccept={async () => {
+          try {
+            const { error } = await updateRequestStatus(currentRequestId, "accepted");
+            if (error) throw error;
+            toast.success("Request accepted!");
+            setShowRequestDetail(false);
+            setShowRequestsInbox(true);
+          } catch (err: any) {
+            toast.error(err.message || "Failed to accept request.");
+          }
         }}
-        onDecline={() => {
-          console.log("Request declined:", currentRequestId);
-          setShowRequestDetail(false);
-          setShowRequestsInbox(true);
+        onDecline={async () => {
+          try {
+            const { error } = await updateRequestStatus(currentRequestId, "declined");
+            if (error) throw error;
+            toast.success("Request declined.");
+            setShowRequestDetail(false);
+            setShowRequestsInbox(true);
+          } catch (err: any) {
+            toast.error(err.message || "Failed to decline request.");
+          }
         }}
         onStartChat={() => {
           setShowRequestDetail(false);
@@ -445,11 +461,23 @@ export default function App() {
           setCurrentChatRecipientId(requestId);
           setShowChatThread(true);
         }}
-        onAcceptRequest={(requestId) => {
-          console.log("Quick accept request:", requestId);
+        onAcceptRequest={async (requestId) => {
+          try {
+            const { error } = await updateRequestStatus(requestId, "accepted");
+            if (error) throw error;
+            toast.success("Request accepted!");
+          } catch (err: any) {
+            toast.error(err.message || "Failed to accept request.");
+          }
         }}
-        onDeclineRequest={(requestId) => {
-          console.log("Quick decline request:", requestId);
+        onDeclineRequest={async (requestId) => {
+          try {
+            const { error } = await updateRequestStatus(requestId, "declined");
+            if (error) throw error;
+            toast.success("Request declined.");
+          } catch (err: any) {
+            toast.error(err.message || "Failed to decline request.");
+          }
         }}
       />
     );
@@ -715,9 +743,23 @@ export default function App() {
           setCurrentChatRecipientId(selectedUserId || "");
           setShowChatThread(true);
         }}
-        onSendRequest={() => {
-          console.log("Send connection request to:", selectedUserId);
-          setShowPublicProfile(false);
+        onSendRequest={async () => {
+          if (!selectedUserId) return;
+          try {
+            const { error } = await sendBookingRequest({
+              listingId: "", // Empty for profile connection
+              recipientId: selectedUserId,
+              moveInDate: new Date().toISOString().split('T')[0],
+              lengthOfStay: "Connection Request",
+              budgetConfirmed: true,
+              introMessage: `Hello! I'd like to connect regarding accommodation.`
+            });
+            if (error) throw error;
+            toast.success("Connection request sent!");
+            setShowPublicProfile(false);
+          } catch (err: any) {
+            toast.error(err.message || "Failed to send request.");
+          }
         }}
       />
     );

@@ -1,50 +1,24 @@
 import { ArrowLeft, Share, Heart, Home, Bed, Bath, Sofa, Calendar, MapPin, User, Phone, MessageCircle, Hospital, ShoppingCart, ShoppingBag, Fuel, Bus, GraduationCap, Dumbbell, Plus, Cross, Coffee } from "lucide-react";
 import { useState } from "react";
-import type { ListingData } from "./CreateListingContext";
 
 interface RentalDetailsProps {
   onBack: () => void;
-  listing?: ListingData;
+  listing?: any;
   onRentNow?: () => void;
 }
 
 export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Demo data for entire home rental
-  const demoListing: ListingData = {
-    intent: "rental",
-    livingSetup: "entire-apartment",
-    existingRoommates: [],
-    spaceDetails: {
-      bedrooms: "2",
-      bathrooms: "1",
-      furnished: true,
-      privateBathroom: null,
-      utilitiesIncluded: false,
-    },
-    idealFor: [],
-    nearbyFacilities: [
-      { id: "hospital", distance: "close" },
-      { id: "supermarket", distance: "very-close" },
-      { id: "transit", distance: "very-close" },
-    ],
-    rent: "800",
-    deposit: "800",
-    moveInDate: "2026-02-15",
-    minimumStay: "12-months",
-    locationDetails: {
-      country: "Rwanda",
-      city: "Kigali",
-      area: "Downtown",
-      address: "123 Kigali St",
-      hideAddress: false,
-    },
-    photos: [],
-    description: "Beautiful entire apartment in a prime location. Modern finishes, natural light throughout, and close to all amenities. Perfect for individuals or couples looking for their own space.",
-  };
+  const activeListingData = listing;
 
-  const activeListingData = listing || demoListing;
+  if (!activeListingData) {
+    return (
+      <div className="size-full flex items-center justify-center bg-white">
+        <p className="text-[#6b7280]">Listing details not found.</p>
+      </div>
+    );
+  }
 
   // Helper functions
   const getLivingSetupLabel = () => {
@@ -74,13 +48,10 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
     return facilities[id] || { label: id, icon: MapPin };
   };
 
-  // Placeholder images
-  const placeholderImages = [
-    "https://images.unsplash.com/photo-1662454419736-de132ff75638?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBiZWRyb29tfGVufDF8fHx8MTc2OTM2NzE0N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    "https://images.unsplash.com/photo-1713352533011-601ad0689860?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3p5JTIwbGl2aW5nJTIwcm9vbSUyMGRlY29yfGVufDF8fHx8MTc2OTQ2MDUxOXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    "https://images.unsplash.com/photo-1597497522150-2f50bffea452?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcGFydG1lbnQlMjBraXRjaGVuJTIwbW9kZXJufGVufDF8fHx8MTc2OTM5MTM0NXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    "https://images.unsplash.com/photo-1651752523215-9bf678c29355?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcGFydG1lbnQlMjBidWlsZGluZyUyMGV4dGVyaW9yfGVufDF8fHx8MTc2OTQyNTI3Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-  ];
+  // Get gallery images
+  const galleryImages = activeListingData.images && activeListingData.images.length > 0 
+    ? activeListingData.images 
+    : [activeListingData.image_url || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"];
 
   return (
     <div className="size-full flex flex-col bg-white overflow-auto">
@@ -117,7 +88,7 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
           {/* Main Image */}
           <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden bg-[#f3f4f6] mb-[12px]">
             <img
-              src={placeholderImages[currentImageIndex]}
+              src={galleryImages[currentImageIndex]}
               alt="Property"
               className="w-full h-full object-cover"
             />
@@ -125,7 +96,7 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
             {/* Image indicators */}
             <div className="absolute bottom-[16px] left-1/2 -translate-x-1/2 flex gap-[8px]">
-              {placeholderImages.map((_, index) => (
+              {galleryImages.map((_: any, index: number) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
@@ -139,7 +110,7 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
 
           {/* Thumbnail Images */}
           <div className="flex gap-[8px] overflow-x-auto pb-[2px]">
-            {placeholderImages.map((img, index) => (
+            {galleryImages.map((img: string, index: number) => (
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
@@ -157,7 +128,7 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
         <div className="px-[24px] pt-[24px]">
           <div className="flex items-start justify-between mb-[4px]">
             <h1 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[20px] leading-[26px] text-[#1f2a37] flex-1">
-              Modern City Apartment
+              {activeListingData?.title || "Property Details"}
             </h1>
             <div className="text-right">
               <span className="font-['Inter:Bold',sans-serif] font-bold text-[14px] leading-[18px] text-[#fe456a]">
@@ -173,7 +144,7 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
           <div className="flex items-center gap-[4px] mb-[12px]">
             <MapPin className="w-[16px] h-[16px] text-[#9da4ae]" />
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[18px] text-[#9da4ae]">
-              City Center, Kigali
+              {activeListingData.location}
             </p>
           </div>
 
@@ -375,7 +346,7 @@ export function RentalDetails({ onBack, listing, onRentNow }: RentalDetailsProps
           {/* Nearby places chips */}
           {activeListingData.nearbyFacilities.length > 0 && (
             <div className="flex flex-wrap gap-[8px] mb-[16px]">
-              {activeListingData.nearbyFacilities.map((facility) => {
+              {activeListingData.nearbyFacilities.map((facility: any) => {
                 const { label, icon: Icon } = getFacilityInfo(facility.id);
                 return (
                   <div key={facility.id} className="px-[12px] py-[8px] bg-[#f9f5ff] rounded-[8px] flex items-center gap-[6px]">

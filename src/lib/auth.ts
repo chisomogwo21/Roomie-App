@@ -128,5 +128,10 @@ export async function getProfile(userId: string) {
     .eq('id', userId)
     .single();
 
+  if (error && error.code === 'PGRST116') {
+    // No profile found
+    return { data: null, error: null };
+  }
+
   return { data, error };
 }
