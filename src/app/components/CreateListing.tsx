@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { CreateListingProvider, useCreateListing } from "./CreateListingContext";
+import { CreateListingProvider, useCreateListing, ListingData } from "./CreateListingContext";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { ListingIntent } from "./create-listing/ListingIntent";
 import { LivingSetup } from "./create-listing/LivingSetup";
@@ -14,11 +14,50 @@ import { PhotosAndPublish } from "./create-listing/PhotosAndPublish";
 
 interface CreateListingProps {
   onBack: () => void;
+  initialData?: any;
 }
 
-function CreateListingFlow({ onBack }: CreateListingProps) {
-  const { shouldShowRoommateScreen } = useCreateListing();
+function CreateListingFlow({ onBack, initialData }: CreateListingProps) {
+  const { shouldShowRoommateScreen, loadListingData, resetListing } = useCreateListing();
   const [currentStep, setCurrentStep] = useState(1);
+
+  useEffect(() => {
+    if (initialData) {
+      // Map DB fields to Context state format
+      const mappedData: ListingData = {
+        id: initialData.id,
+        user_id: initialData.user_id,
+        intent: initialData.intent,
+        livingSetup: initialData.living_setup,
+        existingRoommates: initialData.existing_roommates || [],
+        spaceDetails: {
+          bedrooms: initialData.bedrooms || "",
+          bathrooms: initialData.bathrooms || "",
+          furnished: initialData.furnished,
+          privateBathroom: initialData.private_bathroom,
+          utilitiesIncluded: initialData.utilities_included,
+        },
+        locationDetails: {
+          country: initialData.country || "",
+          city: initialData.city || "",
+          area: initialData.area || "",
+          address: initialData.address || "",
+          hideAddress: initialData.hide_address || false,
+        },
+        idealFor: initialData.ideal_for || [],
+        nearbyFacilities: initialData.nearby_facilities || [],
+        rent: initialData.rent?.toString() || "",
+        deposit: initialData.deposit?.toString() || "",
+        moveInDate: initialData.move_in_date || "",
+        minimumStay: initialData.minimum_stay || "",
+        photos: initialData.images || (initialData.image_url ? [initialData.image_url] : []),
+        description: initialData.description || "",
+      };
+      loadListingData(mappedData);
+    } else {
+      resetListing();
+    }
+  }, [initialData]);
 
   const handleNext = () => {
     setCurrentStep(currentStep + 1);

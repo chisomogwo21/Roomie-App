@@ -93,6 +93,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showRecentViewed, setShowRecentViewed] = useState(false);
+  const [editingListing, setEditingListing] = useState<any | null>(null);
   
   // Data states
   const [favorites, setFavorites] = useState<ListingData[]>([]);
@@ -825,7 +826,15 @@ export default function App() {
 
   // If create listing is active, show it
   if (showCreateListing) {
-    return <CreateListing onBack={() => setShowCreateListing(false)} />;
+    return (
+      <CreateListing 
+        onBack={() => {
+          setShowCreateListing(false);
+          setEditingListing(null);
+        }} 
+        initialData={editingListing}
+      />
+    );
   }
 
   // If onboarding is active, show it
@@ -966,7 +975,13 @@ export default function App() {
           />
         )}
         {activeTab === "my-listing" && (
-          <MyListing onCreateListing={() => setShowCreateListing(true)} />
+          <MyListing 
+            onCreateListing={() => setShowCreateListing(true)} 
+            onEditListing={(listing) => {
+              setEditingListing(listing);
+              setShowCreateListing(true);
+            }}
+          />
         )}
         {activeTab === "profile" && (
           <Profile

@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useCreateListing } from "../CreateListingContext";
 import { Upload, X, Home, User, Loader2 } from "lucide-react";
-import { createProperty } from "../../../lib/properties";
+import { createProperty, updateProperty } from "../../../lib/properties";
 import { toast } from "sonner";
 
 interface PhotosAndPublishProps {
@@ -11,9 +11,12 @@ interface PhotosAndPublishProps {
 export function PhotosAndPublish({ onPublish }: PhotosAndPublishProps) {
   const { listingData, updatePhotosAndDescription, resetListing } = useCreateListing();
   const [description, setDescription] = useState(listingData.description);
-  const [photos, setPhotos] = useState<File[]>([]);
-  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<(File | string)[]>(listingData.photos || []);
+  const [photoUrls, setPhotoUrls] = useState<string[]>(
+    (listingData.photos || []).map(p => typeof p === 'string' ? p : URL.createObjectURL(p))
+  );
   const [loading, setLoading] = useState(false);
+  const isEditing = !!listingData.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const maxDescriptionLength = 350;
@@ -43,20 +46,24 @@ export function PhotosAndPublish({ onPublish }: PhotosAndPublishProps) {
       updatePhotosAndDescription(photos, description);
       
       // 2. Call Supabase with the combined data
-      const { error } = await createProperty({
+      const finalData = {
         ...listingData,
-        photos, // Ensure actual files are sent
+        photos,
         description
-      });
+      };
 
-      if (error) throw error;
+      const result = isEditing 
+        ? await updateProperty(listingData.id!, finalData)
+        : await createProperty(finalData);
+
+      if (result.error) throw result.error;
 
       // 3. Success handling
-      toast.success("Listing published successfully!");
+      toast.success(isEditing ? "Listing updated successfully!" : "Listing published successfully!");
       resetListing();
       onPublish();
     } catch (err: any) {
-      toast.error(err.message || "Failed to publish listing.");
+      toast.error(err.message || `Failed to ${isEditing ? 'update' : 'publish'} listing.`);
     } finally {
       setLoading(false);
     }
@@ -238,7 +245,7 @@ export function PhotosAndPublish({ onPublish }: PhotosAndPublishProps) {
             : "bg-[#e5e7eb] text-[#9da4ae] cursor-not-allowed"
         }`}
       >
-        {loading ? <Loader2 className="w-[20px] h-[20px] animate-spin" /> : "Publish Listing"}
+        {loading ? <Loader2 className="w-[20px] h-[20px] animate-spin" /> : (isEditing ? "Save Changes" : "Publish Listing")}
       </button>
     </div>
   );

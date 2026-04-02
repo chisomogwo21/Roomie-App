@@ -80,7 +80,8 @@ interface CreateListingContextType {
     moveInDate: string;
     minimumStay: string;
   }) => void;
-  updatePhotosAndDescription: (photos: File[], description: string) => void;
+  updatePhotosAndDescription: (photos: (File | string)[], description: string) => void;
+  loadListingData: (data: ListingData) => void;
   resetListing: () => void;
   shouldShowRoommateScreen: () => boolean;
 }
@@ -161,8 +162,12 @@ export function CreateListingProvider({ children }: { children: ReactNode }) {
     setListingData((prev) => ({ ...prev, ...data }));
   };
 
-  const updatePhotosAndDescription = (photos: File[], description: string) => {
+  const updatePhotosAndDescription = (photos: (File | string)[], description: string) => {
     setListingData((prev) => ({ ...prev, photos, description }));
+  };
+
+  const loadListingData = (data: ListingData) => {
+    setListingData(data);
   };
 
   const resetListing = () => {
@@ -186,6 +191,7 @@ export function CreateListingProvider({ children }: { children: ReactNode }) {
         updateNearbyFacilities,
         updatePriceAndAvailability,
         updatePhotosAndDescription,
+        loadListingData,
         resetListing,
         shouldShowRoommateScreen,
       }}

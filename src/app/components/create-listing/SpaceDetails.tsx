@@ -23,7 +23,12 @@ export function SpaceDetails({ onNext }: SpaceDetailsProps) {
   const showPrivateBathroom = listingData.livingSetup?.includes("private-room");
   const showUtilities = true; // Show for all types
 
-  const canProceed = localDetails.bedrooms !== "" && localDetails.bathrooms !== "";
+  const canProceed = 
+    localDetails.bathrooms !== "" &&
+    localDetails.furnished !== null &&
+    localDetails.utilitiesIncluded !== null &&
+    (!showBedrooms || localDetails.bedrooms !== "") &&
+    (!showPrivateBathroom || localDetails.privateBathroom !== null);
 
   return (
     <div className="px-[24px] pt-[24px] pb-[100px]">

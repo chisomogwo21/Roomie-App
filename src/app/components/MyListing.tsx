@@ -1,15 +1,17 @@
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Trash2, Pencil } from "lucide-react";
 import { useState, useEffect } from "react";
-import { fetchMyProperties } from "../../lib/properties";
+import { fetchMyProperties, deleteProperty } from "../../lib/properties";
 import { toast } from "sonner";
 
 interface MyListingProps {
   onCreateListing: () => void;
+  onEditListing: (property: any) => void;
 }
 
-export function MyListing({ onCreateListing }: MyListingProps) {
+export function MyListing({ onCreateListing, onEditListing }: MyListingProps) {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -38,6 +40,27 @@ export function MyListing({ onCreateListing }: MyListingProps) {
     loadListings();
     return () => { isMounted = false; };
   }, []);
+
+  const handleDelete = async (propertyId: string, imageUrls: string[]) => {
+    if (!window.confirm("Are you sure you want to delete this listing? This action cannot be undone.")) {
+      return;
+    }
+
+    setDeletingId(propertyId);
+    try {
+      const { error } = await deleteProperty(propertyId, imageUrls);
+      if (error) throw error;
+
+      toast.success("Listing deleted successfully!");
+      // Update local state to remove the listing immediately
+      setProperties(prev => prev.filter(p => p.id !== propertyId));
+    } catch (err: any) {
+      console.error("Error deleting property:", err);
+      toast.error(err.message || "Failed to delete listing.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="size-full flex flex-col bg-[#fcfcfd]">
@@ -122,6 +145,29 @@ export function MyListing({ onCreateListing }: MyListingProps) {
                       Listed
                     </span>
                   </div>
+                  
+                  {/* Delete Button */}
+                  <button
+                    onClick={() => handleDelete(property.id, property.images || [property.image_url].filter(Boolean))}
+                    disabled={deletingId === property.id}
+                    className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm rounded-full text-[#fe456a] hover:bg-red-50 transition-colors shadow-sm border border-white/20 disabled:opacity-50"
+                    title="Delete Listing"
+                  >
+                    {deletingId === property.id ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={18} />
+                    )}
+                  </button>
+
+                  {/* Edit Button */}
+                  <button
+                    onClick={() => onEditListing(property)}
+                    className="absolute top-4 right-[60px] p-2 bg-white/90 backdrop-blur-sm rounded-full text-[#1f2a37] hover:bg-[#f3f4f6] transition-colors shadow-sm border border-white/20"
+                    title="Edit Listing"
+                  >
+                    <Pencil size={18} />
+                  </button>
                 </div>
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-2">
