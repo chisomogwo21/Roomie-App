@@ -805,7 +805,7 @@ export default function App() {
 
   // If property details is active, show it
   if (showPropertyDetails) {
-    const isFav = currentListing ? favorites.some(item => item.rent === currentListing.rent && item.description === currentListing.description) : false;
+    const isFav = currentListing ? favorites.some(item => (item.id && item.id === currentListing.id) || (item.rent === currentListing.rent && item.description === currentListing.description)) : false;
     
     return (
       <PropertyDetails 
@@ -957,6 +957,7 @@ export default function App() {
               setHasCompletedPreferences(true);
               setShowOnboarding(true);
             }}
+            onViewListing={handleViewListing}
           />
         )}
         {activeTab === "community" && (
@@ -964,7 +965,7 @@ export default function App() {
         )}
         {activeTab === "explore" && (
           <Explore 
-            onViewListing={() => setShowPropertyDetails(true)}
+            onViewListing={handleViewListing}
             onViewProfile={() => setShowMatching(true)}
             onSelectCity={(cityName) => {
               // For demo: selecting a city opens the property details page

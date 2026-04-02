@@ -5,7 +5,7 @@ import { fetchProperties } from "../../lib/properties";
 
 interface ExploreProps {
   onSelectCity?: (cityName: string) => void;
-  onViewListing?: () => void;
+  onViewListing?: (listing: any) => void;
   onViewProfile?: () => void;
 }
 
@@ -21,7 +21,7 @@ export function Explore({ onViewListing }: ExploreProps) {
     async function loadProperties() {
       setLoading(true);
       try {
-        const { data, error } = await fetchProperties();
+        const { data, error } = await fetchProperties(1, 20);
         if (error) {
           setError("Failed to load properties");
         } else {
@@ -130,7 +130,17 @@ export function Explore({ onViewListing }: ExploreProps) {
                 {filteredProperties.map((prop) => (
                   <button
                     key={prop.id}
-                    onClick={() => onViewListing?.()}
+                    onClick={() => onViewListing?.({
+                      id: prop.id,
+                      intent: prop.intent || "rental",
+                      rent: (prop.rent || prop.price).toString(),
+                      title: prop.title,
+                      location: prop.location,
+                      image_url: prop.image_url,
+                      bedrooms: prop.bedrooms,
+                      bathrooms: prop.bathrooms,
+                      photos: [prop.image_url]
+                    })}
                     className="flex flex-col bg-white rounded-[16px] overflow-hidden border border-[#e5e7eb] hover:shadow-md transition-all text-left"
                   >
                     {/* Image */}

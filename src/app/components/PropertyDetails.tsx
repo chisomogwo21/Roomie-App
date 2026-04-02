@@ -1,5 +1,6 @@
-import { ArrowLeft, Share, Heart, Home, Bed, Bath, Sofa, Calendar, MapPin, User, Hospital, ShoppingCart, ShoppingBag, Fuel, Bus, GraduationCap, Dumbbell, Plus, Cross, Coffee } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Share, Heart, Home, Bed, Bath, Sofa, Calendar, MapPin, User, Hospital, ShoppingCart, ShoppingBag, Fuel, Bus, GraduationCap, Dumbbell, Plus, Cross, Coffee, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { fetchPropertyById } from "../../lib/properties";
 
 interface PropertyDetailsProps {
   onBack: () => void;
@@ -19,13 +20,69 @@ export function PropertyDetails({
   onToggleFavorite
 }: PropertyDetailsProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeListingData, setActiveListingData] = useState<any>(listing);
+  const [loading, setLoading] = useState(!listing || !listing.description);
+  const [error, setError] = useState<string | null>(null);
 
-  const activeListingData = listing;
+  useEffect(() => {
+    async function getFullDetails() {
+      if (!listing?.id) return;
+      
+      // If we already have full details (description), don't fetch
+      if (listing.description && listing.spaceDetails?.furnished !== undefined) {
+        setLoading(false);
+        return;
+      }
 
-  if (!activeListingData) {
+      setLoading(true);
+      try {
+        const { data, error } = await fetchPropertyById(listing.id);
+        if (error) throw error;
+        
+        // Map database fields to UI state format if needed
+        const mappedData = {
+          ...data,
+          spaceDetails: {
+            bedrooms: data.bedrooms || "1",
+            bathrooms: data.bathrooms || "1",
+            furnished: data.furnished,
+            privateBathroom: data.private_bathroom,
+            utilitiesIncluded: data.utilities_included
+          },
+          existingRoommates: data.existing_roommates || [],
+          idealFor: data.ideal_for || [],
+          nearbyFacilities: data.nearby_facilities || [],
+          rent: data.rent || data.price,
+          deposit: data.deposit || data.price,
+          minimumStay: data.minimum_stay || "6-months",
+          moveInDate: data.move_in_date || new Date().toISOString()
+        };
+        
+        setActiveListingData(mappedData);
+      } catch (err: any) {
+        setError(err.message || "Failed to load listing details.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getFullDetails();
+  }, [listing?.id]);
+
+  if (loading) {
     return (
-      <div className="size-full flex items-center justify-center bg-white">
-        <p className="text-[#6b7280]">Listing details not found.</p>
+      <div className="size-full flex flex-col items-center justify-center bg-white">
+        <Loader2 className="w-[40px] h-[40px] animate-spin text-[#fe456a] mb-4" />
+        <p className="text-[#9da4ae] font-['Inter:Medium',sans-serif]">Loading listing details...</p>
+      </div>
+    );
+  }
+
+  if (error || !activeListingData) {
+    return (
+      <div className="size-full flex flex-col items-center justify-center bg-white px-6 text-center">
+        <p className="text-[#f04438] mb-4">{error || "Listing details not found."}</p>
+        <button onClick={onBack} className="text-[#fe456a] font-medium">Go Back</button>
       </div>
     );
   }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, MessageCircle, Bell, Heart, Home as HomeIcon, ArrowRight, ChevronDown, Loader2, Sparkles, User } from "lucide-react";
+import { MapPin, MessageCircle, Bell, Heart, Home as HomeIcon, ArrowRight, ChevronDown, Loader2, Sparkles, User, Plus } from "lucide-react";
 import { fetchProperties } from "../../lib/properties";
 import { getMatches, MatchResult } from "../../lib/matching";
 import { RWANDA_LOCATIONS } from "../constants/locations";
@@ -18,6 +18,19 @@ interface HomeProps {
   onCompletePreferences?: () => void;
   onViewListing?: (listing: any) => void;
 }
+
+const ListingSkeleton = () => (
+  <div className="flex-none w-[160px] bg-[#fafafa] rounded-[12px] overflow-hidden animate-pulse">
+    <div className="w-full h-[100px] bg-[#e5e7eb]" />
+    <div className="p-[12px]">
+      <div className="h-[12px] w-[60%] bg-[#e5e7eb] rounded mb-[8px]" />
+      <div className="h-[14px] w-[90%] bg-[#e5e7eb] rounded mb-[8px]" />
+      <div className="h-[14px] w-[40%] bg-[#e5e7eb] rounded mb-[8px]" />
+      <div className="h-[12px] w-[70%] bg-[#e5e7eb] rounded" />
+    </div>
+  </div>
+);
+
 export function Home({
   userName = "Guest",
   hasCompletedPreferences = false,
@@ -36,33 +49,53 @@ export function Home({
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   const [selectedTopLocation, setSelectedTopLocation] = useState<string | null>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      try {
-        const [propRes, matchRes] = await Promise.all([
-          fetchProperties(),
-          getMatches()
-        ]);
+  const loadData = async (pageNum: number, isInitial = false) => {
+    if (isInitial) setLoading(true);
+    else setLoadingMore(true);
 
-        if (propRes.error) throw new Error("Failed to load properties.");
-        
-        setProperties(propRes.data || []);
+    try {
+      const [propRes, matchRes] = await Promise.all([
+        fetchProperties(pageNum, 10),
+        isInitial ? getMatches() : Promise.resolve([])
+      ]);
+
+      if (propRes.error) throw new Error("Failed to load properties.");
+      
+      const newProps = propRes.data || [];
+      if (isInitial) {
+        setProperties(newProps);
         setMatches(matchRes || []);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      } else {
+        setProperties(prev => [...prev, ...newProps]);
       }
+
+      setHasMore(newProps.length === 10);
+      setPage(pageNum);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
-    
-    loadData();
+  };
+
+  useEffect(() => {
+    loadData(1, true);
   }, [hasCompletedPreferences]);
+
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      loadData(page + 1);
+    }
+  };
 
   // Determine greeting based on time of day
   const getGreeting = () => {
@@ -315,75 +348,87 @@ export function Home({
           Homes you might like
         </p>
 
-        <div className="flex gap-[12px] overflow-x-auto pb-[8px] -mx-6 px-6">
+        <div className="flex gap-[12px] overflow-x-auto pb-[8px] -mx-6 px-6 scrollbar-hide">
           {loading ? (
-            <div className="flex-1 flex justify-center py-[20px]">
-              <Loader2 className="w-[32px] h-[32px] animate-spin text-[#fe456a]" />
-            </div>
+            <>
+              <ListingSkeleton />
+              <ListingSkeleton />
+              <ListingSkeleton />
+            </>
           ) : error ? (
-            <p className="text-sm text-[#f04438]">{error}</p>
+            <p className="text-sm text-[#f04438] px-6">{error}</p>
           ) : properties.filter((h: any) => !selectedTopLocation || h.location.toLowerCase().includes(selectedTopLocation.toLowerCase())).length === 0 ? (
             <p className="text-sm text-[#6b7280] px-6 w-full text-center">No properties found{selectedTopLocation ? ` in ${selectedTopLocation}` : ""}.</p>
           ) : (
-            properties.filter((h: any) => !selectedTopLocation || h.location.toLowerCase().includes(selectedTopLocation.toLowerCase())).map((home: any) => (
-              <button
-                key={home.id}
-                onClick={() => onViewListing && onViewListing({
-                  intent: home.intent || "rental",
-                  livingSetup: home.living_setup || "entire-apartment",
-                  existingRoommates: [], // To be fetched if needed
-                  spaceDetails: { 
-                    bedrooms: home.bedrooms || "1", 
-                    bathrooms: home.bathrooms || "1", 
-                    furnished: home.furnished, 
-                    privateBathroom: home.private_bathroom, 
-                    utilitiesIncluded: home.utilities_included 
-                  },
-                  locationDetails: { 
-                    country: home.country || "Rwanda", 
-                    city: home.city || "Kigali", 
-                    area: home.area || home.location, 
-                    address: home.address || home.location, 
-                    hideAddress: home.hide_address 
-                  },
-                  idealFor: home.ideal_for || [],
-                  nearbyFacilities: home.nearby_facilities || [],
-                  rent: (home.rent || home.price).toString(),
-                  deposit: (home.deposit || home.price).toString(),
-                  moveInDate: home.move_in_date || "2026-04-01",
-                  minimumStay: home.minimum_stay || "6-months",
-                  photos: home.images || [home.image_url],
-                  description: home.description || home.title
-                })}
-                className="flex-none w-[160px] bg-[#fafafa] rounded-[12px] overflow-hidden hover:bg-[#f3f4f6] transition-colors text-left"
-              >
-                <div className="relative">
-                  <img
-                    src={home.image_url || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=160&h=100&fit=crop"}
-                    alt={home.title}
-                    className="w-full h-[100px] object-cover"
-                  />
-                </div>
-                <div className="p-[12px]">
-                  {/* Listing type label */}
-                  <p className="font-['Inter:Regular',sans-serif] font-normal text-[9px] leading-[12px] text-[#9da4ae] mb-[4px]">
-                    {home.intent === 'roommate' ? 'Looking for Roomie' : 'Property'}
-                  </p>
-                  <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] leading-[18px] text-[#1f2a37] mb-[4px] truncate">
-                    {home.title}
-                  </p>
-                  <p className="font-['Inter:Bold',sans-serif] font-bold text-[14px] leading-[18px] text-[#fe456a] mb-[4px]">
-                    ${home.price}
-                    <span className="font-['Inter:Regular',sans-serif] font-normal text-[10px] leading-[14px] text-[#9da4ae]">
-                      /month
-                    </span>
-                  </p>
-                  <p className="font-['Inter:Regular',sans-serif] font-normal text-[10px] leading-[14px] text-[#9da4ae] mb-[4px]">
-                    {home.location}
-                  </p>
-                </div>
-              </button>
-            ))
+            <>
+              {properties.filter((h: any) => !selectedTopLocation || h.location.toLowerCase().includes(selectedTopLocation.toLowerCase())).map((home: any) => (
+                <button
+                  key={home.id}
+                  onClick={() => onViewListing && onViewListing({
+                    id: home.id,
+                    intent: home.intent || "rental",
+                    livingSetup: home.living_setup || "entire-apartment",
+                    spaceDetails: { 
+                      bedrooms: home.bedrooms || "1", 
+                      bathrooms: home.bathrooms || "1", 
+                    },
+                    locationDetails: { 
+                      city: home.city || home.location, 
+                    },
+                    rent: (home.rent || home.price).toString(),
+                    photos: [home.image_url],
+                    title: home.title,
+                    location: home.location,
+                    image_url: home.image_url
+                  })}
+                  className="flex-none w-[160px] bg-[#fafafa] rounded-[12px] overflow-hidden hover:bg-[#f3f4f6] transition-colors text-left"
+                >
+                  <div className="relative">
+                    <img
+                      src={home.image_url || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=160&h=100&fit=crop"}
+                      alt={home.title}
+                      className="w-full h-[100px] object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-[12px]">
+                    {/* Listing type label */}
+                    <p className="font-['Inter:Regular',sans-serif] font-normal text-[9px] leading-[12px] text-[#9da4ae] mb-[4px]">
+                      {home.intent === 'roommate' ? 'Looking for Roomie' : 'Property'}
+                    </p>
+                    <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] leading-[18px] text-[#1f2a37] mb-[4px] truncate">
+                      {home.title}
+                    </p>
+                    <p className="font-['Inter:Bold',sans-serif] font-bold text-[14px] leading-[18px] text-[#fe456a] mb-[4px]">
+                      ${home.price || home.rent}
+                      <span className="font-['Inter:Regular',sans-serif] font-normal text-[10px] leading-[14px] text-[#9da4ae]">
+                        /month
+                      </span>
+                    </p>
+                    <p className="font-['Inter:Regular',sans-serif] font-normal text-[10px] leading-[14px] text-[#9da4ae] mb-[4px] truncate">
+                      {home.location}
+                    </p>
+                  </div>
+                </button>
+              ))}
+              
+              {hasMore && !selectedTopLocation && (
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="flex-none w-[120px] flex flex-col items-center justify-center bg-[#fafafa] rounded-[12px] border-2 border-dashed border-[#e5e7eb] hover:bg-[#f3f4f6] transition-colors"
+                >
+                  {loadingMore ? (
+                    <Loader2 className="w-6 h-6 animate-spin text-[#fe456a]" />
+                  ) : (
+                    <>
+                      <Plus className="w-6 h-6 text-[#9da4ae] mb-2" />
+                      <span className="text-[12px] font-medium text-[#9da4ae]">Load More</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </>
           )}
         </div>
 

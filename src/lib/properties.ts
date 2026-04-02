@@ -82,13 +82,31 @@ export async function createProperty(listingData: ListingData) {
 }
 
 /**
- * Fetches all property listings from the database.
+ * Fetches property listings from the database with pagination and field selection.
+ * Summarized view for performance.
  */
-export async function fetchProperties() {
+export async function fetchProperties(page = 1, limit = 10) {
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error, count } = await supabase
+    .from('properties')
+    .select('id, title, price, location, image_url, intent, living_setup, bedrooms, bathrooms, rent, city, country', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  return { data, error, count };
+}
+
+/**
+ * Fetches a single property listing by ID with full details.
+ */
+export async function fetchPropertyById(id: string) {
   const { data, error } = await supabase
     .from('properties')
     .select('*')
-    .order('created_at', { ascending: false });
+    .eq('id', id)
+    .single();
 
   return { data, error };
 }
