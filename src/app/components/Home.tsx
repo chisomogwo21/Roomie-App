@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MapPin, MessageCircle, Bell, Heart, Home as HomeIcon, ArrowRight, ChevronDown, Loader2, Sparkles, User } from "lucide-react";
 import { fetchProperties } from "../../lib/properties";
 import { getMatches, MatchResult } from "../../lib/matching";
+import { RWANDA_LOCATIONS } from "../constants/locations";
 
 interface HomeProps {
   userName?: string;
@@ -96,17 +97,17 @@ export function Home({
               </div>
             </button>
             {showLocationDropdown && (
-              <div className="absolute top-full left-0 mt-[8px] w-[220px] bg-white rounded-[12px] shadow-[0px_8px_24px_rgba(31,42,55,0.12)] border border-[#e5e7eb] overflow-hidden z-50">
-                {["Kicukiro, Kigali", "Nyarutarama, Kigali", "Kibagabaga, Kigali", "Gikondo, Kigali", "Musanze, Rwanda", "Rubavu, Rwanda"].map((loc) => (
+              <div className="absolute top-full left-0 mt-[8px] w-[220px] max-h-[300px] bg-white rounded-[12px] shadow-[0px_8px_24px_rgba(31,42,55,0.12)] border border-[#e5e7eb] overflow-y-auto z-50 feedback-dropdown-scroll">
+                {RWANDA_LOCATIONS.map((loc) => (
                   <button
-                    key={loc}
+                    key={loc.value}
                     onClick={() => {
-                      if (onLocationChange) onLocationChange(loc);
+                      if (onLocationChange) onLocationChange(loc.label);
                       setShowLocationDropdown(false);
                     }}
                     className="w-full text-left px-[16px] py-[12px] font-['Inter:Medium',sans-serif] text-[13px] text-[#1f2a37] hover:bg-[#f9fafb] border-b border-[#f3f4f6] last:border-b-0"
                   >
-                    {loc}
+                    {loc.label}
                   </button>
                 ))}
               </div>

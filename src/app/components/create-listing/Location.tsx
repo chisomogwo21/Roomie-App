@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { MapPin } from "lucide-react";
 import { useCreateListing } from "../CreateListingContext";
+import { RWANDA_CITIES } from "../../constants/locations";
 
 interface LocationProps {
   onNext: () => void;
@@ -8,7 +9,7 @@ interface LocationProps {
 
 // Countries and their cities
 const LOCATION_DATA: Record<string, string[]> = {
-  Rwanda: ["Kigali", "Musanze", "Gisenyi", "Butare", "Rwamagana"],
+  Rwanda: RWANDA_CITIES,
   Kenya: ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret"],
   Uganda: ["Kampala", "Entebbe", "Jinja", "Mbarara", "Gulu"],
   Tanzania: ["Dar es Salaam", "Mwanza", "Arusha", "Dodoma", "Mbeya"],
