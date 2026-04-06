@@ -1,4 +1,6 @@
-import { Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, Loader2 } from "lucide-react";
+import { getMatches } from "../../lib/matching";
 
 interface Match {
   id: string;
@@ -14,63 +16,55 @@ interface MatchesProps {
 }
 
 export function Matches({ onMatchClick }: MatchesProps) {
-  // Demo matches data
-  const matches: Match[] = [
-    {
-      id: "1",
-      name: "Sarah K.",
-      initial: "S",
-      compatibility: 92,
-      livingSetup: "Looking for roommate",
-      hasUnreadMessage: true,
-    },
-    {
-      id: "2",
-      name: "Alex M.",
-      initial: "A",
-      compatibility: 88,
-      livingSetup: "Room available",
-      hasUnreadMessage: false,
-    },
-    {
-      id: "3",
-      name: "Emma R.",
-      initial: "E",
-      compatibility: 85,
-      livingSetup: "Looking for roommate",
-      hasUnreadMessage: true,
-    },
-    {
-      id: "4",
-      name: "Jordan P.",
-      initial: "J",
-      compatibility: 82,
-      livingSetup: "Room available",
-      hasUnreadMessage: false,
-    },
-    {
-      id: "5",
-      name: "Maria L.",
-      initial: "M",
-      compatibility: 78,
-      livingSetup: "Looking for roommate",
-      hasUnreadMessage: false,
-    },
-    {
-      id: "6",
-      name: "David N.",
-      initial: "D",
-      compatibility: 75,
-      livingSetup: "Room available",
-      hasUnreadMessage: false,
-    },
-  ];
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadMatches() {
+      setLoading(true);
+      try {
+        const topMatches = await getMatches();
+        
+        // Filter roommates/listings appropriately or combine
+        // We'll focus on people (roommates) as per previous UI paradigm
+        const formatted = topMatches
+          .filter(m => m.type === 'roommate')
+          .slice(0, 10) // Limit to top 10 on this view
+          .map(m => ({
+            id: m.id,
+            name: m.name,
+            initial: m.name.charAt(0).toUpperCase() || '?',
+            compatibility: m.matchScore > 100 ? 100 : m.matchScore,
+            livingSetup: m.bio || "Looking for roommate", // Fallback to bio or a default
+            hasUnreadMessage: false // Dynamic via messages API later
+          }));
+
+        setMatches(formatted);
+      } catch (err) {
+        console.error("Error loading matches for view:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMatches();
+  }, []);
 
   const handleMatchPress = (matchId: string) => {
     // For now, just open chat on regular click
     // Long press functionality can be added with more complex event handling
     onMatchClick(matchId);
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-[24px] py-[48px] bg-white">
+        <Loader2 className="w-[40px] h-[40px] text-[#fe456a] animate-spin mb-[16px]" />
+        <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[18px] leading-[24px] text-[#1f2a37] mb-[8px]">
+          Finding compatible roommates...
+        </h2>
+      </div>
+    );
+  }
 
   if (matches.length === 0) {
     // Empty State

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, Check, X, Trash2, Search, Filter, Home } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
 
 interface Listing {
   id: string;
@@ -12,10 +13,31 @@ interface Listing {
   owner: string;
 }
 
-const mockListings: Listing[] = [];
-
 export function AdminListings() {
-  const [listings] = useState<Listing[]>(mockListings);
+  const [listings, setListings] = useState<Listing[]>([]);
+
+  useEffect(() => {
+    async function fetchListings() {
+      const { data } = await supabase.from('properties').select(`
+        *,
+        profiles ( full_name )
+      `);
+      if (data) {
+        const mappedListings: Listing[] = data.map((prop: any) => ({
+          id: prop.id,
+          title: prop.title || 'Untitled',
+          city: prop.location || 'Unknown',
+          livingSetup: prop.property_type || 'Shared',
+          listingType: prop.property_type === 'entire' ? "Entire Home" : "Shared",
+          status: 'Active',
+          dateCreated: prop.created_at || new Date().toISOString(),
+          owner: prop.profiles?.full_name || 'Anonymous'
+        }));
+        setListings(mappedListings);
+      }
+    }
+    fetchListings();
+  }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 

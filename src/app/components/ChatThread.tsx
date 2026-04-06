@@ -33,6 +33,7 @@ export function ChatThread({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [chatUser, setChatUser] = useState({ name: recipientName, avatar: recipientAvatar });
   
   // Format the DatabaseMessage to ChatMessage
   const mapDatabaseToChatMessage = (dbMessage: DatabaseMessage, myUserId: string): ChatMessage => {
@@ -52,18 +53,34 @@ export function ChatThread({
 
     let currentUserId: string = "";
 
-    const loadMessages = async () => {
+    const loadData = async () => {
       try {
+        // Fetch recipient profile for header
+        const { supabase } = await import("../../lib/supabaseClient");
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', recipientId)
+          .single();
+          
+        if (profile) {
+          setChatUser({
+            name: profile.full_name || "Roomie User",
+            avatar: profile.avatar_url,
+          });
+        }
+
+        // Fetch messages
         const { messages: dbMessages, currentUserId: uid } = await fetchMessages(recipientId);
         currentUserId = uid;
         const formatted = dbMessages.map(msg => mapDatabaseToChatMessage(msg, uid));
         setMessages(formatted);
       } catch (err) {
-        console.error("Failed to load messages:", err);
+        console.error("Failed to load chat data:", err);
       }
     };
 
-    loadMessages();
+    loadData();
 
     // Subscribe to real-time updates
     const subscription = subscribeToMessages(recipientId, (newMessage: DatabaseMessage) => {
@@ -125,16 +142,20 @@ export function ChatThread({
           </button>
 
           {/* Profile Image */}
-          <div className="w-[40px] h-[40px] rounded-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center">
-            <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[20px] text-white">
-              {recipientName.charAt(0)}
-            </span>
-          </div>
+          {chatUser.avatar ? (
+            <img src={chatUser.avatar} alt={chatUser.name} className="w-[40px] h-[40px] rounded-full object-cover" />
+          ) : (
+            <div className="w-[40px] h-[40px] rounded-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center">
+              <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[20px] text-white">
+                {chatUser.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
 
           {/* Name & Context */}
           <div className="flex-1 min-w-0">
             <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[15px] leading-[20px] text-[#1f2a37] truncate">
-              {recipientName}
+              {chatUser.name}
             </h2>
             <div className="flex items-center gap-[6px]">
               <Home className="w-[12px] h-[12px] text-[#9da4ae]" />

@@ -43,7 +43,7 @@ import { Settings as SettingsScreen } from "./components/Settings";
 import { Favorites } from "./components/Favorites";
 import { RecentViewed } from "./components/RecentViewed";
 import type { RequestStatus } from "./components/RequestStatusBadge";
-import { signOut, getSession } from "../lib/auth";
+import { signOut, getSession, getProfile } from "../lib/auth";
 import { supabase } from "../lib/supabaseClient";
 import { updateRequestStatus, sendBookingRequest } from "../lib/requests";
 import { toast } from "sonner";
@@ -128,150 +128,169 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Timeout safety fallback: ensure loading screen disappears after 5 seconds
-    const timeoutId = setTimeout(() => {
-      setIsInitializing(prev => {
-        if (prev) {
-          console.warn("Initialization took too long, engaging timeout fallback.");
-          return false;
-        }
-        return prev;
-      });
-    }, 5000);
+    let isMounted = true;
+    let subscription: any = null;
 
-    // Check for existing session on mount
-    const checkSession = async () => {
+    const initializeAuth = async () => {
       try {
-        const { data: { session }, error: sessionError } = await getSession();
-        
+        // Enforce a strict 5-second timeout on the session fetch
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Auth initialization timeout")), 5000)
+        );
+
+        // Fetch session with a timeout race
+        const { data: { session }, error: sessionError }: any = await Promise.race([
+          getSession(),
+          timeoutPromise
+        ]);
+
         if (sessionError) throw sessionError;
 
         // Handle password reset recovery link
         const hash = window.location.hash;
         if (hash && hash.includes("type=recovery")) {
-          setShowLogin(false);
-          setShowSignUp(false);
-          setShowForgotPassword(false);
-          setShowVerifyEmail(false);
-          setShowChangePassword(true);
+          if (isMounted) {
+            setShowLogin(false);
+            setShowSignUp(false);
+            setShowForgotPassword(false);
+            setShowVerifyEmail(false);
+            setShowChangePassword(true);
+            setIsInitializing(false);
+          }
           return;
         }
 
         if (session) {
-          setShowLogin(false);
-          setActiveTab("home");
-          
-          // Fetch extended profile data from profiles table
-          const { getProfile } = await import("../lib/auth");
-          const { data: profile, error: profileError } = await getProfile(session.user.id);
-          
-          if (profileError) {
-            console.warn("Could not fetch profile details, using session metadata fallback.");
+          if (isMounted) {
+            setShowLogin(false);
+            setActiveTab("home");
           }
 
-          let resolvedFullName = "";
-          let resolvedEmail = session.user?.email || "";
-          let resolvedAvatar = "";
+          try {
+            // Fetch extended profile data from profiles table
+            const { data: profile, error: profileError } = await getProfile(session.user.id);
 
-          if (profile) {
-            resolvedFullName = profile.full_name || "";
-            resolvedAvatar = profile.avatar_url || "";
-            resolvedEmail = profile.email || resolvedEmail;
+            if (profileError) {
+              console.warn("Could not fetch profile details, using session metadata fallback.");
+            }
+
+            let resolvedFullName = "";
+            let resolvedEmail = session.user?.email || "";
+            let resolvedAvatar = "";
+
+            if (profile) {
+              resolvedFullName = profile.full_name || "";
+              resolvedAvatar = profile.avatar_url || "";
+              resolvedEmail = profile.email || resolvedEmail;
+            }
+
+            if (!resolvedFullName) {
+              resolvedFullName = session.user?.user_metadata?.full_name ||
+                session.user?.user_metadata?.username ||
+                "";
+            }
+
+            if (!resolvedFullName && resolvedEmail) {
+              const emailPrefix = resolvedEmail.split("@")[0];
+              resolvedFullName = emailPrefix
+                .split(/[._]/)
+                .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
+                .join(" ");
+            }
+
+            const firstName = resolvedFullName.split(" ")[0] || "Roomie";
+
+            if (isMounted) {
+              setUserName(firstName);
+              setUserFullName(resolvedFullName);
+              setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
+              setUserEmail(resolvedEmail);
+            }
+          } catch (profileErr) {
+            console.warn("Failed to fetch profile during initialization:", profileErr);
           }
-
-          // Fallback sequence for name
-          if (!resolvedFullName) {
-            resolvedFullName = session.user?.user_metadata?.full_name || 
-                              session.user?.user_metadata?.username || 
-                              "";
-          }
-
-          // Final fallback: derive from email if no name at all
-          if (!resolvedFullName && resolvedEmail) {
-            const emailPrefix = resolvedEmail.split("@")[0];
-            resolvedFullName = emailPrefix
-              .split(/[\._]/)
-              .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-              .join(" ");
-          }
-
-          const firstName = resolvedFullName.split(" ")[0] || "Roomie";
-          
-          setUserName(firstName);
-          setUserFullName(resolvedFullName);
-          setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
-          setUserEmail(resolvedEmail);
         } else {
-          // No session, show login
-          setShowLogin(true);
+          if (isMounted) setShowLogin(true);
         }
       } catch (err) {
         console.error("Initialization error:", err);
         // Ensure app still loads even if auth check fails
-        setShowLogin(true);
+        if (isMounted) setShowLogin(true);
       } finally {
-        setIsInitializing(false);
-        clearTimeout(timeoutId);
+        if (isMounted) setIsInitializing(false);
       }
     };
 
-    checkSession();
+    initializeAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
-        setShowLogin(false);
-        setShowSignUp(false);
-        setActiveTab("home");
-        
-        // Fetch extended profile data from profiles table
-        const { getProfile } = await import("../lib/auth");
-        const { data: profile } = await getProfile(session.user.id);
-        
-        let resolvedFullName = "";
-        let resolvedEmail = session.user?.email || "";
-        let resolvedAvatar = "";
+    try {
+      // Listen for auth changes
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+          if (isMounted) {
+            setShowLogin(false);
+            setShowSignUp(false);
+            setActiveTab("home");
+          }
 
-        if (profile) {
-          resolvedFullName = profile.full_name || "";
-          resolvedAvatar = profile.avatar_url || "";
-          resolvedEmail = profile.email || resolvedEmail;
+          try {
+            const { data: profile } = await getProfile(session.user.id);
+
+            let resolvedFullName = "";
+            let resolvedEmail = session.user?.email || "";
+            let resolvedAvatar = "";
+
+            if (profile) {
+              resolvedFullName = profile.full_name || "";
+              resolvedAvatar = profile.avatar_url || "";
+              resolvedEmail = profile.email || resolvedEmail;
+            }
+
+            if (!resolvedFullName) {
+              resolvedFullName = session.user?.user_metadata?.full_name ||
+                session.user?.user_metadata?.username ||
+                "";
+            }
+
+            if (!resolvedFullName && resolvedEmail) {
+              const emailPrefix = resolvedEmail.split("@")[0];
+              resolvedFullName = emailPrefix
+                .split(/[._]/)
+                .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
+                .join(" ");
+            }
+
+            const firstName = resolvedFullName.split(" ")[0] || "Roomie";
+
+            if (isMounted) {
+              setUserName(firstName);
+              setUserFullName(resolvedFullName);
+              setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
+              setUserEmail(resolvedEmail);
+            }
+          } catch (err) {
+            console.warn("Failed to fetch profile on auth change:", err);
+          }
+        } else if (event === "SIGNED_OUT") {
+          if (isMounted) {
+            setShowLogin(true);
+            setUserName("Guest");
+            setUserFullName("");
+            setUserEmail("");
+            setUserAvatar("");
+          }
         }
-
-        // Fallback sequence for name
-        if (!resolvedFullName) {
-          resolvedFullName = session.user?.user_metadata?.full_name || 
-                            session.user?.user_metadata?.username || 
-                            "";
-        }
-
-        // Final fallback: derive from email if no name at all
-        if (!resolvedFullName && resolvedEmail) {
-          const emailPrefix = resolvedEmail.split("@")[0];
-          resolvedFullName = emailPrefix
-            .split(/[\._]/)
-            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(" ");
-        }
-
-        const firstName = resolvedFullName.split(" ")[0] || "Roomie";
-        
-        setUserName(firstName);
-        setUserFullName(resolvedFullName);
-        setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
-        setUserEmail(resolvedEmail);
-      } else if (event === "SIGNED_OUT") {
-        setShowLogin(true);
-        setUserName("Guest");
-        setUserFullName("");
-        setUserEmail("");
-        setUserAvatar("");
-      }
-    });
+      });
+      subscription = data.subscription;
+    } catch (err) {
+      console.error("Failed to attach auth state listener:", err);
+    }
 
     return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeoutId);
+      isMounted = false;
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 

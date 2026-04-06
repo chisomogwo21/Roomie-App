@@ -23,70 +23,52 @@ export async function getMatches(): Promise<MatchResult[]> {
     
     if (authError || !user) return [];
 
-    // 1. Get current user's profile and preferences
-    const { data: myProfile } = await getProfile(user.id);
-    if (!myProfile) return [];
+    // 1. Fetch Roommate Matches via optimized Postgres RPC
+    const { data: rpcRoommates, error: rpcError } = await supabase
+      .rpc('match_roommates', { p_user_id: user.id });
 
-    const myTags = myProfile.lifestyle_tags || [];
-    const myBudget = myProfile.budget_max || 1000000;
-    const myLocation = myProfile.preferred_location || '';
-
-    // 2. Fetch other user profiles (potential roommates)
-    const { data: otherProfiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .neq('id', user.id)
-      .limit(50);
-
-    // 3. Fetch properties (potential listings)
-    const { data: properties } = await supabase
-      .from('properties')
-      .select('*')
-      .limit(50);
+    if (rpcError) {
+      console.warn("RPC match_roommates failed, falling back or returning empty:", rpcError);
+    }
 
     const results: MatchResult[] = [];
 
-    // 4. Calculate match scores for profiles
-    otherProfiles?.forEach(profile => {
-      let score = 0;
-      
-      // Lifestyle tag overlap (up to 60 points)
-      if (myTags.length > 0 && profile.lifestyle_tags?.length > 0) {
-        const commonTags = myTags.filter((tag: string) => profile.lifestyle_tags.includes(tag));
-        score += (commonTags.length / myTags.length) * 60;
-      }
-
-      // Location match (up to 40 points)
-      if (myLocation && profile.preferred_location?.toLowerCase().includes(myLocation.toLowerCase())) {
-        score += 40;
-      }
-
-      if (score > 20) {
+    if (rpcRoommates && rpcRoommates.length > 0) {
+      rpcRoommates.forEach((profile: any) => {
         results.push({
           id: profile.id,
           type: 'roommate',
           name: profile.full_name || 'Roomie User',
           avatar_url: profile.avatar_url,
           location: profile.preferred_location || 'Kigali',
-          matchScore: Math.round(score),
+          matchScore: profile.match_score || 0,
           lifestyle_tags: profile.lifestyle_tags,
           bio: profile.bio
         });
-      }
-    });
+      });
+    }
 
-    // 5. Calculate match scores for properties
+    // 2. Fallback or simplified Properties matching
+    const { data: myProfile } = await getProfile(user.id);
+    const myBudget = myProfile?.budget_max || 1000000;
+    const myLocation = myProfile?.preferred_location || '';
+
+    const { data: properties } = await supabase
+      .from('properties')
+      .select('*')
+      .limit(20); // Keep property matching light
+
     properties?.forEach(prop => {
       let score = 0;
       
-      // Budget match (up to 50 points)
+      // Budget match
       if (prop.price <= myBudget) {
         score += 50;
       } else if (prop.price <= myBudget * 1.2) {
-        score += 30; // Slightly over budget
+        score += 30; 
       }
 
-      // Location match (up to 50 points)
+      // Location match
       if (myLocation && prop.location?.toLowerCase().includes(myLocation.toLowerCase())) {
         score += 50;
       }
@@ -105,7 +87,7 @@ export async function getMatches(): Promise<MatchResult[]> {
       }
     });
 
-    // 6. Sort by score
+    // 3. Sort by combined score
     return results.sort((a, b) => b.matchScore - a.matchScore);
   } catch (err) {
     console.error("Error calculating matches:", err);

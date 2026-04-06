@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, Ban, CheckCircle, Search, Filter } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
 
 interface User {
   id: string;
@@ -12,10 +13,28 @@ interface User {
   joinedDate: string;
 }
 
-const mockUsers: User[] = [];
-
 export function AdminUsers() {
-  const [users] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    async function fetchUsers() {
+      const { data } = await supabase.from('profiles').select('*');
+      if (data) {
+        const mappedUsers: User[] = data.map(profile => ({
+          id: profile.id,
+          name: profile.full_name || 'Anonymous',
+          email: 'Hidden for privacy',
+          role: profile.role === 'host' ? 'Landlord' : 'Roommate',
+          city: profile.preferred_location || 'Not set',
+          listingsCount: 0,
+          status: 'Active',
+          joinedDate: profile.created_at || new Date().toISOString()
+        }));
+        setUsers(mappedUsers);
+      }
+    }
+    fetchUsers();
+  }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");

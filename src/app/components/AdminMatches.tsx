@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, Send, Filter } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
 
 interface Match {
   id: string;
@@ -19,15 +20,33 @@ interface Request {
   date: string;
 }
 
-const mockMatches: Match[] = [];
-
-const mockRequests: Request[] = [];
-
 export function AdminMatches() {
   const [activeTab, setActiveTab] = useState<"matches" | "requests">("matches");
-  const [matches] = useState<Match[]>(mockMatches);
-  const [requests] = useState<Request[]>(mockRequests);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [requests, setRequests] = useState<Request[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  useEffect(() => {
+    async function loadRequests() {
+      const { data } = await supabase.from('requests').select(`
+        *,
+        sender:profiles!requests_sender_id_fkey(full_name),
+        receiver:profiles!requests_receiver_id_fkey(full_name),
+        property:properties(title)
+      `);
+      if (data) {
+        setRequests(data.map((r: any) => ({
+          id: r.id,
+          from: r.sender?.full_name || 'Anonymous',
+          to: r.receiver?.full_name || 'Anonymous',
+          listingTitle: r.property?.title || 'Unknown Listing',
+          status: r.status === 'pending' ? 'Pending' : r.status === 'accepted' ? 'Accepted' : 'Declined',
+          date: r.created_at || new Date().toISOString()
+        })));
+      }
+    }
+    loadRequests();
+  }, []);
 
   const filteredMatches = matches.filter(match => 
     statusFilter === "all" || match.status.toLowerCase() === statusFilter
