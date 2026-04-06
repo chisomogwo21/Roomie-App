@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, MapPin, Calendar, Users, Home, Loader2 } from "lucide-react";
-import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { sendBookingRequest, checkExistingRequest } from "../../lib/requests";
 import { toast } from "sonner";
 
@@ -115,117 +114,6 @@ export function BookingRequest({
 
       {/* Content */}
       <div className="flex-1 pb-[24px]">
-        {/* Listing Summary Card */}
-        <div className="mx-[20px] mt-[20px] bg-white rounded-[16px] border border-[#e5e7eb] overflow-hidden">
-          {/* Cover Image */}
-          <div className="w-full h-[200px] bg-gray-200 relative">
-            {listing?.coverImage ? (
-              <ImageWithFallback
-                src={listing.coverImage}
-                alt={listing.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#FE456A]/10 to-[#FE456A]/20">
-                <Home size={48} className="text-[#FE456A]/40" />
-              </div>
-            )}
-          </div>
-
-          {/* Listing Info */}
-          <div className="p-[20px]">
-            <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[18px] leading-[24px] text-[#1f2a37] mb-[8px]">
-              {listing?.title || "Loading..."}
-            </h2>
-            
-            <div className="flex items-center gap-[8px] text-[14px] text-[#6b7280] mb-[12px]">
-              <Home size={16} />
-              <span>{listing?.livingSetup || "Entire Home"}</span>
-            </div>
-
-            <div className="flex items-center gap-[8px] text-[14px] text-[#6b7280] mb-[16px]">
-              <MapPin size={16} />
-              <span>{listing?.neighborhood ? `${listing.neighborhood}, ` : ""}{listing?.city || "Select Location"}</span>
-            </div>
-
-            <div className="flex items-center justify-between pt-[16px] border-t border-[#e5e7eb]">
-              <div>
-                <div className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[20px] leading-[28px] text-[#1f2a37]">
-                  {listing?.price || "$0"}
-                </div>
-                <div className="text-[12px] text-[#6b7280]">{listing?.priceUnit || "/month"}</div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-[6px] text-[14px] text-[#6b7280]">
-                  <Calendar size={16} />
-                  <span>{listing?.moveInDate || "Flexible"}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Roommate Context - Only for shared listings */}
-        {isShared && listing?.roommates && listing.roommates.length > 0 && (
-          <div className="mx-[20px] mt-[16px] bg-white rounded-[16px] border border-[#e5e7eb] p-[20px]">
-            <div className="flex items-center gap-[8px] mb-[16px]">
-              <Users size={20} className="text-[#FE456A]" />
-              <h3 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] text-[#1f2a37]">
-                Your Future Roommates
-              </h3>
-            </div>
-
-            <div className="space-y-[16px]">
-              {listing.roommates.map((roommate) => (
-                <div key={roommate.id} className="flex items-start gap-[12px]">
-                  {/* Avatar */}
-                  <div className="w-[48px] h-[48px] rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[18px] text-gray-600">
-                      {roommate.name.charAt(0)}
-                    </span>
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-[8px] mb-[4px]">
-                      <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[15px] leading-[20px] text-[#1f2a37]">
-                        {roommate.name}
-                      </span>
-                      <span className="text-[13px] text-[#6b7280]">· {roommate.age}</span>
-                    </div>
-                    <div className="text-[13px] text-[#6b7280] mb-[8px]">{roommate.occupation}</div>
-                    
-                    {/* Lifestyle Tags */}
-                    <div className="flex flex-wrap gap-[6px] mb-[8px]">
-                      {roommate.lifestyleTags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-[10px] py-[4px] bg-[#f3f4f6] text-[#4b5563] text-[12px] rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Compatibility */}
-                    <div className="flex items-center gap-[8px]">
-                      <div className="flex-1 h-[6px] bg-[#f3f4f6] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-[#FE456A] rounded-full"
-                          style={{ width: `${roommate.compatibilityScore}%` }}
-                        />
-                      </div>
-                      <span className="text-[13px] font-medium text-[#FE456A]">
-                        {roommate.compatibilityScore}% match
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Request Details Form */}
         <div className="mx-[20px] mt-[16px] bg-white rounded-[16px] border border-[#e5e7eb] p-[20px]">
           <h3 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] text-[#1f2a37] mb-[20px]">
