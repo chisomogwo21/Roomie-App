@@ -110,6 +110,7 @@ export default function App() {
   const [userEmail, setUserEmail] = useState("");
   const [_userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [hasCompletedPreferences, setHasCompletedPreferences] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   
@@ -205,6 +206,13 @@ export default function App() {
               setUserFullName(resolvedFullName);
               setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
               setUserEmail(resolvedEmail);
+              if (profile) {
+                setUserProfile(profile);
+                if (profile.preferred_location) {
+                  setUserLocation(profile.preferred_location);
+                }
+                setHasCompletedPreferences(profile.lifestyle_tags?.length > 0);
+              }
             }
           } catch (profileErr) {
             console.warn("Failed to fetch profile during initialization:", profileErr);
@@ -821,6 +829,7 @@ export default function App() {
       <RoommateMatching 
         onBack={() => setShowMatching(false)} 
         onViewProfile={handleViewProfile} 
+        userAvatar={userProfile?.avatar_url}
         onStartChat={(userId) => {
           setShowMatching(false);
           setCurrentChatStatus("accepted");
@@ -1005,7 +1014,10 @@ export default function App() {
           />
         )}
         {activeTab === "community" && (
-          <CommunityFeed onViewProfile={handleViewProfile} />
+          <CommunityFeed 
+            onViewProfile={handleViewProfile} 
+            currentLocation={userProfile?.preferred_location}
+          />
         )}
         {activeTab === "explore" && (
           <Explore 

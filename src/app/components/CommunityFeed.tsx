@@ -9,12 +9,10 @@ import { fetchPosts, createPost, subscribeToPosts, DatabasePost } from "../../li
 interface CommunityFeedProps {
   onBack?: () => void;
   onViewProfile?: (userId: string) => void;
+  currentLocation?: string;
 }
 
-interface CommunityFeedProps {
-  onBack?: () => void;
-  onViewProfile?: (userId: string) => void;
-}
+// Duplicate interface removed
 
 const FILTER_CATEGORIES = [
   "All",
@@ -24,7 +22,7 @@ const FILTER_CATEGORIES = [
   "Tips & Advice",
 ];
 
-export function CommunityFeed({ onBack, onViewProfile }: CommunityFeedProps) {
+export function CommunityFeed({ onBack, onViewProfile, currentLocation }: CommunityFeedProps) {
   const [activeFilter, setActiveFilter] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [posts, setPosts] = useState<DatabasePost[]>([]);
@@ -146,7 +144,7 @@ export function CommunityFeed({ onBack, onViewProfile }: CommunityFeedProps) {
         <div className="flex items-center gap-2">
           <Users className="w-[16px] h-[16px] text-[#9da4ae]" />
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[13px] leading-[16px] text-[#6b7280]">
-            Posts from <span className="font-semibold text-[#1f2a37]">Kigali</span>
+            Posts from <span className="font-semibold text-[#1f2a37]">{currentLocation || "Kigali"}</span>
           </p>
         </div>
       </div>
@@ -168,7 +166,7 @@ export function CommunityFeed({ onBack, onViewProfile }: CommunityFeedProps) {
                 userId={post.user_id} 
                 userName={post.profiles?.full_name || "Roomie User"}
                 userAvatar={post.profiles?.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop"}
-                location={post.location || "Kigali"}
+                location={post.location || currentLocation || "Kigali"}
                 timestamp={new Date(post.created_at).toLocaleDateString()}
                 text={post.text}
                 tags={post.tags}

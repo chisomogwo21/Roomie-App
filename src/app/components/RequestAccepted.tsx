@@ -9,9 +9,9 @@ interface RequestAcceptedProps {
 
 export function RequestAccepted({
   onStartChat,
-  recipientName = "Sarah K.",
+  recipientName = "Roommate",
   compatibilityScore = 82,
-  propertyTitle = "Sunny 2BR in Kigali Heights",
+  propertyTitle = "the home",
 }: RequestAcceptedProps) {
   return (
     <div className="size-full flex flex-col bg-[#fafafa]">

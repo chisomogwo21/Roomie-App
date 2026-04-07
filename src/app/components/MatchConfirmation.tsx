@@ -11,11 +11,12 @@ interface RoommateProfile {
 
 interface MatchConfirmationProps {
   profile: RoommateProfile;
+  userAvatar?: string;
   onClose: () => void;
   onStartChat: () => void;
 }
 
-export function MatchConfirmation({ profile, onClose, onStartChat }: MatchConfirmationProps) {
+export function MatchConfirmation({ profile, userAvatar, onClose, onStartChat }: MatchConfirmationProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -62,10 +63,9 @@ export function MatchConfirmation({ profile, onClose, onStartChat }: MatchConfir
         <div className="px-[32px] py-[32px]">
           {/* Profile Photos */}
           <div className="flex justify-center items-center mb-[24px] relative">
-            {/* Your Photo (Mock) */}
             <div className="w-[100px] h-[100px] rounded-full border-[4px] border-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] overflow-hidden bg-[#e5e7eb] z-10">
               <img
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop"
+                src={userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop"}
                 alt="You"
                 className="w-full h-full object-cover"
               />

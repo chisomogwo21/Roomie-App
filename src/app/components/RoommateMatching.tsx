@@ -22,9 +22,10 @@ interface RoommateMatchingProps {
   onBack: () => void;
   onViewProfile?: (userId: string) => void;
   onStartChat?: (userId: string) => void;
+  userAvatar?: string;
 }
 
-export function RoommateMatching({ onBack, onViewProfile, onStartChat }: RoommateMatchingProps) {
+export function RoommateMatching({ onBack, onViewProfile, onStartChat, userAvatar }: RoommateMatchingProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matchedProfile, setMatchedProfile] = useState<RoommateProfile | null>(null);
   const [profiles, setProfiles] = useState<RoommateProfile[]>([]);
@@ -50,7 +51,7 @@ export function RoommateMatching({ onBack, onViewProfile, onStartChat }: Roommat
             lifestyleTags: p.lifestyle_tags || [],
             matchingTags: p.lifestyle_tags?.slice(0, 3) || [],
             bio: p.bio || "",
-            photoUrl: p.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&h=1000&fit=crop"
+            photoUrl: p.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&h=1000&fit=crop"
           })));
         }
       } catch (err) {
@@ -89,6 +90,7 @@ export function RoommateMatching({ onBack, onViewProfile, onStartChat }: Roommat
     return (
       <MatchConfirmation
         profile={matchedProfile}
+        userAvatar={userAvatar}
         onClose={handleCloseMatch}
         onStartChat={() => {
           if (onStartChat) {

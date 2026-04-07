@@ -48,44 +48,28 @@ export async function getMatches(): Promise<MatchResult[]> {
       });
     }
 
-    // 2. Fallback or simplified Properties matching
-    const { data: myProfile } = await getProfile(user.id);
-    const myBudget = myProfile?.budget_max || 1000000;
-    const myLocation = myProfile?.preferred_location || '';
+    // 2. Fetch Property Matches via optimized Postgres RPC
+    const { data: rpcProperties, error: propRpcError } = await supabase
+      .rpc('match_properties', { p_user_id: user.id });
 
-    const { data: properties } = await supabase
-      .from('properties')
-      .select('*')
-      .limit(20); // Keep property matching light
+    if (propRpcError) {
+      console.warn("RPC match_properties failed:", propRpcError);
+    }
 
-    properties?.forEach(prop => {
-      let score = 0;
-      
-      // Budget match
-      if (prop.price <= myBudget) {
-        score += 50;
-      } else if (prop.price <= myBudget * 1.2) {
-        score += 30; 
-      }
-
-      // Location match
-      if (myLocation && prop.location?.toLowerCase().includes(myLocation.toLowerCase())) {
-        score += 50;
-      }
-
-      if (score > 30) {
+    if (rpcProperties && rpcProperties.length > 0) {
+      rpcProperties.forEach((prop: any) => {
         results.push({
           id: prop.id,
           type: 'listing',
           name: prop.title,
           image_url: prop.image_url,
           location: prop.location,
-          price: prop.price,
-          matchScore: Math.round(score),
+          price: Number(prop.price),
+          matchScore: prop.match_score || 0,
           bio: prop.description
         });
-      }
-    });
+      });
+    }
 
     // 3. Sort by combined score
     return results.sort((a, b) => b.matchScore - a.matchScore);

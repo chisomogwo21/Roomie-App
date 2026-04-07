@@ -23,10 +23,10 @@ interface ChatThreadProps {
 
 export function ChatThread({
   onBack,
-  recipientName = "Sarah K.",
+  recipientName = "Roommate",
   recipientAvatar,
-  propertyTitle = "Sunny 2BR in Kigali Heights",
-  livingSetup = "Private Room · Shared Apartment",
+  propertyTitle = "Listing",
+  livingSetup = "Shared Living",
   requestStatus = "accepted",
   recipientId,
 }: ChatThreadProps) {
