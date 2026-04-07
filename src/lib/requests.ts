@@ -19,8 +19,12 @@ export async function sendBookingRequest(requestData: BookingRequestData) {
     throw new Error('You must be logged in to send a request.');
   }
 
-  // Attempt to insert into a 'requests' table. If the table doesn't exist, this will throw an error
-  // which is handled by the component to show a toast message or fallback.
+  // Security check: cannot send request to yourself
+  if (user.id === requestData.recipientId) {
+    throw new Error('You cannot send a booking request to your own listing.');
+  }
+
+  // Attempt to insert into the 'requests' table
   const { data, error } = await supabase
     .from('requests')
     .insert([
@@ -37,7 +41,12 @@ export async function sendBookingRequest(requestData: BookingRequestData) {
     ])
     .select();
 
-  return { data: data ? data[0] : null, error };
+  if (error) {
+    console.error("Supabase request insertion error:", error);
+    throw new Error(error.message || "Failed to submit request to database.");
+  }
+
+  return { data: data ? data[0] : null, error: null };
 }
 
 /**

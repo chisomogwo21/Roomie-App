@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { sendBookingRequest, checkExistingRequest } from "../../lib/requests";
+import { supabase } from "../../lib/supabaseClient";
 import { toast } from "sonner";
 
 interface Roommate {
@@ -24,6 +25,7 @@ interface BookingRequestProps {
     city: string;
     neighborhood: string;
     price: string;
+    rent?: string;
     priceUnit: string;
     moveInDate: string;
     roommates?: Roommate[];
@@ -58,42 +60,60 @@ export function BookingRequest({
   const isFormValid = moveInDate && lengthOfStay && budgetConfirmed;
 
   const handleSubmit = async () => {
-    if (isFormValid) {
-      setLoading(true);
-      try {
-        // Check for existing request first
-        const { data: existing } = await checkExistingRequest(listingId);
-        if (existing) {
-          toast.error("You have already sent a request for this listing.");
-          return;
-        }
+    if (!isFormValid || loading) return;
 
-        const { error } = await sendBookingRequest({
-          listingId,
-          recipientId,
+    setLoading(true);
+    try {
+      // 1. Get current user session to verify self-request
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("You must be logged in to send a request.");
+      }
+
+      // Security check: cannot send request to yourself
+      if (user.id === recipientId) {
+        throw new Error("You cannot send a booking request to your own property.");
+      }
+
+      // 2. Check for existing request first
+      const { data: existing, error: checkError } = await checkExistingRequest(listingId);
+      if (checkError) {
+        console.error("Error checking existing request:", checkError);
+      }
+      
+      if (existing) {
+        toast.error("You have already sent a request for this listing.");
+        onBack(); // Move back to prevent further attempts
+        return;
+      }
+
+      // 3. Send the request
+      const { error } = await sendBookingRequest({
+        listingId,
+        recipientId,
+        moveInDate,
+        lengthOfStay,
+        budgetConfirmed,
+        introMessage
+      });
+      
+      if (error) throw error;
+
+      toast.success("Request sent successfully!");
+      if (onSendRequest) {
+        onSendRequest({
           moveInDate,
           lengthOfStay,
           budgetConfirmed,
           introMessage
         });
-        
-        if (error) throw error;
-
-        toast.success("Request sent successfully!");
-        if (onSendRequest) {
-          onSendRequest({
-            moveInDate,
-            lengthOfStay,
-            budgetConfirmed,
-            introMessage
-          });
-        }
-        onBack();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to send request.");
-      } finally {
-        setLoading(false);
       }
+      onBack();
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      toast.error(err.message || "Failed to send request. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,7 +184,7 @@ export function BookingRequest({
                 />
                 <div className="flex-1">
                   <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px] leading-[20px] text-[#1f2a37]">
-                    I confirm my budget is {listing?.price || "$0"}{listing?.priceUnit || "/month"} <span className="text-[#FE456A]">*</span>
+                    I confirm my budget is {listing?.price || listing?.rent || "$0"}{listing?.priceUnit || "/month"} <span className="text-[#FE456A]">*</span>
                   </span>
                   <p className="text-[13px] text-[#6b7280] mt-[4px]">
                     This helps ensure we're aligned on pricing expectations
