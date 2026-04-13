@@ -6,7 +6,11 @@ import {
   Moon,
   Briefcase,
   ArrowLeft,
+  User,
+  AtSign,
+  MapPin,
 } from "lucide-react";
+import { RWANDA_LOCATIONS } from "../constants/locations";
 
 interface ToggleProps {
   label: string;
@@ -99,6 +103,11 @@ function Badge({ label, selected, onClick }: BadgeProps) {
 }
 
 export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => void; onComplete?: () => void }) {
+  // Basic Profile
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [location, setLocation] = useState("");
+
   // Living Habits
   const [cleanliness, setCleanliness] = useState<string | null>(null);
   const [noiseLevel, setNoiseLevel] = useState<string | null>(null);
@@ -138,6 +147,12 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
         if (userData.user) {
           const { data: profile } = await getProfile(userData.user.id);
           if (profile) {
+            // Load basic profile fields
+            if (profile.full_name) setFullName(profile.full_name);
+            if (profile.username) setUsername(profile.username);
+            if (profile.location) setLocation(profile.location);
+            else if (profile.preferred_location) setLocation(profile.preferred_location);
+            
             // Load structured fields
             if (profile.cleanliness_level) setCleanliness(profile.cleanliness_level);
             if (profile.noise_level) setNoiseLevel(profile.noise_level);
@@ -163,6 +178,10 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
   }, []);
 
   const handleContinue = async () => {
+    if (!fullName.trim()) return toast.error("Full Name is required");
+    if (!username.trim()) return toast.error("Username is required");
+    if (!location.trim()) return toast.error("Location is required");
+
     setLoading(true);
     const loadingToast = toast.loading("Saving your preferences...");
     
@@ -171,6 +190,11 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       
       // Save structured fields to dedicated columns + personality tags separately
       const { error } = await updateProfile({
+        full_name: fullName.trim(),
+        username: username.trim(),
+        location: location,
+        preferred_location: location, // Keep legacy field in sync just in case
+        onboarding_completed: true,
         // Dedicated structured columns for matching engine
         cleanliness_level: cleanliness || null,
         noise_level: noiseLevel || null,
@@ -183,7 +207,12 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
         lifestyle_tags: personalityTags.length > 0 ? personalityTags : null,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes("unique constraint")) {
+          throw new Error("Username is already taken");
+        }
+        throw error;
+      }
 
       toast.dismiss(loadingToast);
       toast.success("Preferences saved!");
@@ -219,6 +248,73 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       </div>
 
       <div className="px-6 py-6 space-y-8 max-w-[600px] mx-auto">
+        {/* Section 0: Basic Profile */}
+        <div>
+          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] text-[#1f2a37] leading-[24px] mb-4">
+            Basic Profile
+          </h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block font-['Inter:Medium',sans-serif] font-medium text-[12px] text-[#6b7280] leading-[16px] mb-2">
+                Full Name *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-[20px] w-[20px] text-[#9da4ae]" />
+                </div>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-[#d2d6db] rounded-[12px] text-[#1f2a37] focus:outline-none focus:ring-2 focus:ring-[#fe456a]/20 focus:border-[#fe456a] transition-all font-['Inter:Regular',sans-serif] text-[15px]"
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-['Inter:Medium',sans-serif] font-medium text-[12px] text-[#6b7280] leading-[16px] mb-2">
+                Username *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <AtSign className="h-[20px] w-[20px] text-[#9da4ae]" />
+                </div>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  className="block w-full pl-10 pr-3 py-3 border border-[#d2d6db] rounded-[12px] text-[#1f2a37] focus:outline-none focus:ring-2 focus:ring-[#fe456a]/20 focus:border-[#fe456a] transition-all font-['Inter:Regular',sans-serif] text-[15px]"
+                  placeholder="e.g. johndoe"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-['Inter:Medium',sans-serif] font-medium text-[12px] text-[#6b7280] leading-[16px] mb-2">
+                Location *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="h-[20px] w-[20px] text-[#9da4ae]" />
+                </div>
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-[#d2d6db] rounded-[12px] text-[#1f2a37] focus:outline-none focus:ring-2 focus:ring-[#fe456a]/20 focus:border-[#fe456a] transition-all font-['Inter:Regular',sans-serif] text-[15px] appearance-none bg-white"
+                >
+                  <option value="" disabled>Select your location</option>
+                  {RWANDA_LOCATIONS.map((loc) => (
+                    <option key={loc.value} value={loc.label}>
+                      {loc.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Section 1: Living Habits */}
         <div>
           <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] text-[#1f2a37] leading-[24px] mb-4">

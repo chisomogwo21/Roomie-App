@@ -4,7 +4,7 @@ import { Home } from "./components/Home";
 import { Loader2 } from "lucide-react";
 import { CommunityFeed } from "./components/CommunityFeed";
 import { BottomNavigation } from "./components/BottomNavigation";
-import { LifestylePreferencesFigma } from "./components/LifestylePreferencesFigma";
+import { LifestylePreferences } from "./components/LifestylePreferences";
 import { MyListing } from "./components/MyListing";
 import { CreateListing } from "./components/CreateListing";
 import { PropertyDetails } from "./components/PropertyDetails";
@@ -208,10 +208,15 @@ export default function App() {
               setUserEmail(resolvedEmail);
               if (profile) {
                 setUserProfile(profile);
-                if (profile.preferred_location) {
+                if (profile.location) {
+                  setUserLocation(profile.location);
+                } else if (profile.preferred_location) {
                   setUserLocation(profile.preferred_location);
                 }
-                setHasCompletedPreferences(profile.lifestyle_tags?.length > 0);
+                setHasCompletedPreferences(profile.onboarding_completed || false);
+                if (!profile.onboarding_completed) {
+                  setShowOnboarding(true);
+                }
               }
             }
           } catch (profileErr) {
@@ -820,7 +825,7 @@ export default function App() {
 
   // If preferences editor is active, show it
   if (showPreferencesEditor) {
-    return <LifestylePreferencesFigma onBack={() => setShowPreferencesEditor(false)} onComplete={() => setShowPreferencesEditor(false)} />;
+    return <LifestylePreferences onBack={() => setShowPreferencesEditor(false)} onComplete={() => setShowPreferencesEditor(false)} />;
   }
 
   // If matching is active, show it
@@ -892,10 +897,9 @@ export default function App() {
 
   // If onboarding is active, show it
   if (showOnboarding) {
-    return <LifestylePreferencesFigma onBack={() => setShowOnboarding(false)} onComplete={() => {
+    return <LifestylePreferences onComplete={() => {
       setShowOnboarding(false);
-      // User has completed onboarding, go to home screen
-      setActiveTab("home");
+      setHasCompletedPreferences(true);
     }} />;
   }
 
@@ -1007,7 +1011,6 @@ export default function App() {
             onStartMatching={() => setShowMatching(true)}
             onBrowseHomes={() => setActiveTab("explore")}
             onCompletePreferences={() => {
-              setHasCompletedPreferences(true);
               setShowOnboarding(true);
             }}
             onViewListing={handleViewListing}

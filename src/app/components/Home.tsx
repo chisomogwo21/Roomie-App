@@ -207,33 +207,35 @@ export function Home({
       </div>
 
       {/* Complete Preferences Card */}
-      <div className="px-6 py-3">
-        <button
-          onClick={onCompletePreferences}
-          className="w-full bg-[#fffaeb] border-2 border-[rgba(253,176,34,0.2)] rounded-[12px] p-[18px] flex items-center gap-[12px] hover:shadow-md transition-all"
-        >
-          <div className="flex-none w-[40px] h-[40px] bg-[#fdb022] rounded-[10px] flex items-center justify-center">
-            <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 20 20">
-              <path
-                d="M7 14.5C7 13.12 5.88 12 4.5 12C3.12 12 2 13.12 2 14.5C2 15.88 3.12 17 4.5 17C5.88 17 7 15.88 7 14.5ZM18 14.5C18 13.12 16.88 12 15.5 12C14.12 12 13 13.12 13 14.5C13 15.88 14.12 17 15.5 17C16.88 17 18 15.88 18 14.5ZM14 5.5C14 4.12 12.88 3 11.5 3C10.12 3 9 4.12 9 5.5C9 6.88 10.12 8 11.5 8C12.88 8 14 6.88 14 5.5ZM7 7L4.5 12M13 7L15.5 12"
-                stroke="white"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.67"
-              />
-            </svg>
-          </div>
-          <div className="flex-1 text-left">
-            <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] leading-[18px] text-[#1f2a37] mb-[4px]">
-              Start your lifestyle preferences
-            </p>
-            <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] leading-[16px] text-[#6b7280]">
-              Help us find better matches for you.
-            </p>
-          </div>
-          <ArrowRight className="flex-none w-[20px] h-[20px] text-[#1f2a37]" />
-        </button>
-      </div>
+      {!hasCompletedPreferences && (
+        <div className="px-6 py-3">
+          <button
+            onClick={onCompletePreferences}
+            className="w-full bg-[#fffaeb] border-2 border-[rgba(253,176,34,0.2)] rounded-[12px] p-[18px] flex items-center gap-[12px] hover:shadow-md transition-all"
+          >
+            <div className="flex-none w-[40px] h-[40px] bg-[#fdb022] rounded-[10px] flex items-center justify-center">
+              <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 20 20">
+                <path
+                  d="M7 14.5C7 13.12 5.88 12 4.5 12C3.12 12 2 13.12 2 14.5C2 15.88 3.12 17 4.5 17C5.88 17 7 15.88 7 14.5ZM18 14.5C18 13.12 16.88 12 15.5 12C14.12 12 13 13.12 13 14.5C13 15.88 14.12 17 15.5 17C16.88 17 18 15.88 18 14.5ZM14 5.5C14 4.12 12.88 3 11.5 3C10.12 3 9 4.12 9 5.5C9 6.88 10.12 8 11.5 8C12.88 8 14 6.88 14 5.5ZM7 7L4.5 12M13 7L15.5 12"
+                  stroke="white"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.67"
+                />
+              </svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] leading-[18px] text-[#1f2a37] mb-[4px]">
+                Start your lifestyle preferences
+              </p>
+              <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] leading-[16px] text-[#6b7280]">
+                Help us find better matches for you.
+              </p>
+            </div>
+            <ArrowRight className="flex-none w-[20px] h-[20px] text-[#1f2a37]" />
+          </button>
+        </div>
+      )}
 
       {/* Recommended for you */}
       {hasCompletedPreferences && (
