@@ -252,27 +252,34 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
         });
 
       if (error) {
+        console.error('Supabase error:', error);
         if (error.message?.includes("unique constraint")) {
           throw new Error("Username is already taken");
         }
         throw error;
       }
 
+      console.log('Onboarding saved successfully');
       toast.dismiss(loadingToast);
       toast.success("Preferences saved!");
       
-      console.log('Onboarding complete');
+      console.log('Redirecting to home...');
       
-      try {
-        if (onComplete) {
-          onComplete();
-        }
-        window.location.href = '/';
-      } catch (e) {
-        window.location.href = '/';
+      // Call onComplete to update local app state
+      if (onComplete) {
+        onComplete();
       }
+
+      // PRIMARY redirect
+      window.location.href = '/';
+
+      // BACKUP redirect (guaranteed fallback)
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+
     } catch (err: any) {
-      console.error("Submission error:", err);
+      console.error("Submission failed:", err);
       toast.dismiss(loadingToast);
       toast.error(err.message || "Failed to save preferences");
     } finally {
