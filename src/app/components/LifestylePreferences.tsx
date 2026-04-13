@@ -11,6 +11,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { RWANDA_LOCATIONS } from "../constants/locations";
+import { supabase } from "../../lib/supabaseClient";
 
 interface ToggleProps {
   label: string;
@@ -216,8 +217,15 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
     setLoading(true);
     const loadingToast = toast.loading("Saving your preferences...");
     
+    // Safety timeout to prevent infinite loading (10 seconds)
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+      toast.dismiss(loadingToast);
+      console.warn("Onboarding submission timed out safely.");
+    }, 10000);
+
     try {
-      const { supabase } = await import("../../lib/supabaseClient");
+      console.log('Starting onboarding submission...');
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
@@ -242,6 +250,7 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
         lifestyle_tags: personalityTags.length > 0 ? personalityTags : null,
       };
 
+      console.log('Sending data to Supabase:', formData);
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -252,37 +261,43 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
         });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase upsert error:', error);
         if (error.message?.includes("unique constraint")) {
           throw new Error("Username is already taken");
         }
         throw error;
       }
 
-      console.log('Onboarding saved successfully');
+      clearTimeout(safetyTimeout);
+      console.log('Onboarding saved successfully in DB');
+      
       toast.dismiss(loadingToast);
       toast.success("Preferences saved!");
       
-      console.log('Redirecting to home...');
+      console.log('Initiating forced redirect to home...');
       
-      // Call onComplete to update local app state
+      // Stop loading UI before the navigation takes over
+      setLoading(false);
+
+      // FORCE navigation - replace prevents back button loops
+      window.location.replace('/');
+
+      // BACKUP fallback: if replace fails or is interrupted by unmount
+      setTimeout(() => {
+        console.log('Fallback redirect triggered');
+        window.location.href = '/';
+      }, 300);
+
+      // Update parent state as a secondary trigger
       if (onComplete) {
         onComplete();
       }
 
-      // PRIMARY redirect
-      window.location.href = '/';
-
-      // BACKUP redirect (guaranteed fallback)
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
-
     } catch (err: any) {
+      clearTimeout(safetyTimeout);
       console.error("Submission failed:", err);
       toast.dismiss(loadingToast);
       toast.error(err.message || "Failed to save preferences");
-    } finally {
       setLoading(false);
     }
   };
