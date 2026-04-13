@@ -103,6 +103,8 @@ function Badge({ label, selected, onClick }: BadgeProps) {
 }
 
 export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => void; onComplete?: () => void }) {
+  const [step, setStep] = useState(1);
+
   // Basic Profile
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -177,6 +179,35 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
     loadExisting();
   }, []);
 
+  const handleNext = () => {
+    if (step === 1) {
+      if (!fullName.trim() || !username.trim() || !location) {
+        return toast.error("Please explicitly fill out your Name, Username, and Location.");
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (!cleanliness || !noiseLevel || !sleepRoutine || !workStyle) {
+        return toast.error("Please answer all living habit questions");
+      }
+      setStep(3);
+    } else if (step === 3) {
+      if (personalityTags.length === 0) {
+        return toast.error("Please select at least one personality tag");
+      }
+      setStep(4);
+    } else if (step === 4) {
+      handleContinue();
+    }
+  };
+
+  const handleBackStep = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    } else if (onBack) {
+      onBack();
+    }
+  };
+
   const handleContinue = async () => {
     if (!fullName.trim()) return toast.error("Full Name is required");
     if (!username.trim()) return toast.error("Username is required");
@@ -229,15 +260,15 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
     <div className="min-h-screen bg-[#fafafa] pb-24">
       {/* Header */}
       <div className="bg-white px-6 pt-12 pb-6 border-b border-[#e5e7eb]">
-        {onBack && (
-          <button onClick={onBack} className="mb-4">
+        {(onBack || step > 1) && (
+          <button onClick={handleBackStep} className="mb-4">
             <ArrowLeft className="w-[24px] h-[24px] text-[#1f2a37]" />
           </button>
         )}
         <div className="flex items-center gap-2 mb-4">
-          <div className="flex-1 h-[4px] bg-[#fe456a] rounded-full" />
-          <div className="flex-1 h-[4px] bg-[#fe456a] rounded-full" />
-          <div className="flex-1 h-[4px] bg-[#e5e7eb] rounded-full" />
+          {[1, 2, 3, 4].map((s) => (
+            <div key={s} className={`flex-1 h-[4px] rounded-full transition-colors ${s <= step ? 'bg-[#fe456a]' : 'bg-[#e5e7eb]'}`} />
+          ))}
         </div>
         <h1 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[24px] text-[#1f2a37] leading-[32px] mb-2">
           Your Lifestyle Preferences
@@ -248,8 +279,10 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       </div>
 
       <div className="px-6 py-6 space-y-8 max-w-[600px] mx-auto">
-        {/* Section 0: Basic Profile */}
-        <div>
+        {step === 1 && (
+          <div className="space-y-8">
+            {/* Section 0: Basic Profile */}
+            <div>
           <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] text-[#1f2a37] leading-[24px] mb-4">
             Basic Profile
           </h2>
@@ -314,9 +347,13 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
             </div>
           </div>
         </div>
+      </div>
+    )}
 
-        {/* Section 1: Living Habits */}
-        <div>
+    {step === 2 && (
+          <div className="space-y-8">
+            {/* Section 1: Living Habits */}
+            <div>
           <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] text-[#1f2a37] leading-[24px] mb-4">
             Living Habits
           </h2>
@@ -429,7 +466,11 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
             </div>
           </div>
         </div>
+      </div>
+    )}
 
+    {step === 3 && (
+      <div className="space-y-8">
         {/* Section 2: Social & Home Rules */}
         <div>
           <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] text-[#1f2a37] leading-[24px] mb-4">
@@ -495,9 +536,13 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
                 onClick={() => togglePersonalityTag(tag)}
               />
             ))}
+            </div>
           </div>
         </div>
+      )}
 
+    {step === 4 && (
+      <div className="space-y-8">
         {/* Section 4: Dealbreakers */}
         <div>
           <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] text-[#1f2a37] leading-[24px] mb-2">
@@ -526,21 +571,25 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
               onChange={setNoFrequentVisitors}
             />
           </div>
-        </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e5e7eb] px-6 py-4">
         <button
-          onClick={handleContinue}
+          onClick={handleNext}
           disabled={loading}
           className="w-full bg-[#fe456a] text-white rounded-[8px] py-3 font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] hover:bg-[#e63d5f] transition-colors mb-2 disabled:bg-[#d2d6db]"
         >
-          {loading ? "Saving..." : "Continue"}
+          {loading ? "Saving..." : (step === 4 ? "Finish" : "Continue")}
         </button>
-        <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] text-[#9da4ae] leading-[16px] text-center">
-          You can change this later.
-        </p>
+        {step < 4 && (
+          <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] text-[#9da4ae] leading-[16px] text-center">
+            You can change this later.
+          </p>
+        )}
       </div>
     </div>
   );
