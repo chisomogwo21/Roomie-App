@@ -261,9 +261,14 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       toast.dismiss(loadingToast);
       toast.success("Preferences saved!");
       
-      if (onComplete) {
-        onComplete();
-      } else {
+      console.log('Onboarding complete');
+      
+      try {
+        if (onComplete) {
+          onComplete();
+        }
+        window.location.href = '/';
+      } catch (e) {
         window.location.href = '/';
       }
     } catch (err: any) {
