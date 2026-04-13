@@ -217,16 +217,18 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
     const loadingToast = toast.loading("Saving your preferences...");
     
     try {
-      const { updateProfile } = await import("../../lib/auth");
+      const { supabase } = await import("../../lib/supabaseClient");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      // Save structured fields to dedicated columns + personality tags separately
-      const { error } = await updateProfile({
+      if (userError || !user) {
+        throw new Error("Authentication required");
+      }
+
+      const formData = {
         full_name: fullName.trim(),
         username: username.trim(),
         location: location,
-        preferred_location: location, // Keep legacy field in sync just in case
-        onboarding_completed: true,
-        // Dedicated structured columns for matching engine
+        preferred_location: location,
         cleanliness_level: cleanliness || null,
         noise_level: noiseLevel || null,
         sleep_routine: sleepRoutine || null,
@@ -234,9 +236,20 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
         smoking: smokingAllowed,
         pets: comfortableWithPets,
         visitors: comfortableWithVisitors,
-        // Pure personality tags only (used for tag-overlap scoring)
+        no_smoking: noSmoking,
+        no_pets: noPets,
+        no_frequent_visitors: noFrequentVisitors,
         lifestyle_tags: personalityTags.length > 0 ? personalityTags : null,
-      });
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          ...formData,
+          onboarding_completed: true,
+          updated_at: new Date().toISOString()
+        });
 
       if (error) {
         if (error.message?.includes("unique constraint")) {
@@ -247,8 +260,14 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
 
       toast.dismiss(loadingToast);
       toast.success("Preferences saved!");
-      onComplete?.();
+      
+      if (onComplete) {
+        onComplete();
+      } else {
+        window.location.href = '/';
+      }
     } catch (err: any) {
+      console.error("Submission error:", err);
       toast.dismiss(loadingToast);
       toast.error(err.message || "Failed to save preferences");
     } finally {
