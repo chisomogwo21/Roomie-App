@@ -46,7 +46,7 @@ export function PostCard({
     const comment: Comment = {
       id: Date.now().toString(),
       userName: "You",
-      userAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
+      userAvatar: "",
       text: newComment,
       timestamp: "Just now",
     };
@@ -187,11 +187,17 @@ export function PostCard({
             <div className="flex flex-col gap-3 mb-4 max-h-[200px] overflow-y-auto">
               {comments.map((comment) => (
                 <div key={comment.id} className="flex gap-2">
-                  <img
-                    src={comment.userAvatar}
-                    alt={comment.userName}
-                    className="w-[28px] h-[28px] rounded-full object-cover flex-shrink-0"
-                  />
+                  {comment.userAvatar ? (
+                    <img
+                      src={comment.userAvatar}
+                      alt={comment.userName}
+                      className="w-[28px] h-[28px] rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-[28px] h-[28px] rounded-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-[12px] text-white">{comment.userName.charAt(0).toUpperCase()}</span>
+                    </div>
+                  )}
                   <div className="flex-1 bg-[#f9fafb] p-2.5 rounded-[12px] rounded-tl-none">
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[12px] text-[#1f2a37]">
@@ -211,12 +217,10 @@ export function PostCard({
           )}
 
           {/* Add Comment Input */}
-          <form onSubmit={handleAddComment} className="flex items-end gap-2">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"
-              alt="You"
-              className="w-[32px] h-[32px] rounded-full object-cover mb-1"
-            />
+            <form onSubmit={handleAddComment} className="flex items-end gap-2">
+            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center flex-shrink-0 mb-1">
+              <span className="font-bold text-[14px] text-white">Y</span>
+            </div>
             <div className="flex-1 relative">
               <input
                 type="text"

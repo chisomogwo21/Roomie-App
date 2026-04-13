@@ -42,16 +42,16 @@ export function RoommateMatching({ onBack, onViewProfile, onStartChat, userAvata
         if (roommates) {
           setProfiles(roommates.map((p: any) => ({
             id: p.id,
-            firstName: p.name || "Roomie",
-            age: p.age || "20s",
-            occupation: p.occupation || "Professional",
-            livingSetup: p.living_setup || "Looking for a Roommate",
-            location: p.location || "Rwanda",
+            firstName: p.name || "Roomie User",
+            age: "",
+            occupation: "",
+            livingSetup: "",
+            location: p.location || "",
             compatibilityScore: p.matchScore || 0,
             lifestyleTags: p.lifestyle_tags || [],
             matchingTags: p.lifestyle_tags?.slice(0, 3) || [],
             bio: p.bio || "",
-            photoUrl: p.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&h=1000&fit=crop"
+            photoUrl: p.avatar_url || ""
           })));
         }
       } catch (err) {

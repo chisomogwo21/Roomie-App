@@ -130,12 +130,20 @@ export function MatchCard({ profile, onSwipeLeft, onSwipeRight, onInfoClick }: M
 
         {/* Profile Image */}
         <div className="relative h-[55%] overflow-hidden">
-          <img
-            src={profile.photoUrl}
-            alt={profile.firstName}
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
+          {profile.photoUrl ? (
+            <img
+              src={profile.photoUrl}
+              alt={profile.firstName}
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center" draggable={false}>
+              <span className="font-['Inter:Bold',sans-serif] font-bold text-[80px] text-white/90">
+                {profile.firstName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
           {/* Compatibility Badge */}

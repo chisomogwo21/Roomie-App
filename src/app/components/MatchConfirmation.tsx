@@ -64,11 +64,17 @@ export function MatchConfirmation({ profile, userAvatar, onClose, onStartChat }:
           {/* Profile Photos */}
           <div className="flex justify-center items-center mb-[24px] relative">
             <div className="w-[100px] h-[100px] rounded-full border-[4px] border-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] overflow-hidden bg-[#e5e7eb] z-10">
-              <img
-                src={userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop"}
-                alt="You"
-                className="w-full h-full object-cover"
-              />
+              {userAvatar ? (
+                <img
+                  src={userAvatar}
+                  alt="You"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#fe456a] to-[#ff758f] flex items-center justify-center">
+                  <span className="font-bold text-[32px] text-white">Y</span>
+                </div>
+              )}
             </div>
 
             {/* Heart in the middle */}
@@ -78,11 +84,17 @@ export function MatchConfirmation({ profile, userAvatar, onClose, onStartChat }:
 
             {/* Match Photo */}
             <div className="w-[100px] h-[100px] rounded-full border-[4px] border-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] overflow-hidden -ml-[20px] z-10">
-              <img
-                src={profile.photoUrl}
-                alt={profile.firstName}
-                className="w-full h-full object-cover"
-              />
+              {profile.photoUrl ? (
+                <img
+                  src={profile.photoUrl}
+                  alt={profile.firstName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#ff758f] to-[#fe456a] flex items-center justify-center">
+                  <span className="font-bold text-[32px] text-white">{profile.firstName.charAt(0).toUpperCase()}</span>
+                </div>
+              )}
             </div>
           </div>
 
