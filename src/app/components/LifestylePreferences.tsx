@@ -137,8 +137,22 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
         const { data: userData } = await getUser();
         if (userData.user) {
           const { data: profile } = await getProfile(userData.user.id);
-          if (profile && profile.lifestyle_tags) {
-            setPersonalityTags(profile.lifestyle_tags);
+          if (profile) {
+            // Load structured fields
+            if (profile.cleanliness_level) setCleanliness(profile.cleanliness_level);
+            if (profile.noise_level) setNoiseLevel(profile.noise_level);
+            if (profile.sleep_routine) setSleepRoutine(profile.sleep_routine);
+            if (profile.work_style) setWorkStyle(profile.work_style);
+            setSmokingAllowed(profile.smoking ?? false);
+            setComfortableWithPets(profile.pets ?? false);
+            setComfortableWithVisitors(profile.visitors ?? false);
+            // Load personality tags (only pure tags, not the old concatenated strings)
+            if (profile.lifestyle_tags) {
+              const pureTags = profile.lifestyle_tags.filter(
+                (t: string) => !t.includes(':') && !t.endsWith(' OK') && !t.startsWith('Shares')
+              );
+              setPersonalityTags(pureTags);
+            }
           }
         }
       } catch (err) {
@@ -155,22 +169,18 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
     try {
       const { updateProfile } = await import("../../lib/auth");
       
-      // Combine all habits and tags into one array for now
-      const allTags = [
-        ...personalityTags,
-        cleanliness ? `Cleanliness: ${cleanliness}` : "",
-        noiseLevel ? `Noise: ${noiseLevel}` : "",
-        sleepRoutine ? `Sleep: ${sleepRoutine}` : "",
-        workStyle ? `Work: ${workStyle}` : "",
-        comfortableWithVisitors ? "Visitors OK" : "",
-        comfortableWithPets ? "Pets OK" : "",
-        smokingAllowed ? "Smoking OK" : "",
-        shareGroceries ? "Shares Groceries" : "",
-        shareCooking ? "Shares Cooking" : "",
-      ].filter(Boolean);
-
+      // Save structured fields to dedicated columns + personality tags separately
       const { error } = await updateProfile({
-        lifestyle_tags: allTags
+        // Dedicated structured columns for matching engine
+        cleanliness_level: cleanliness || null,
+        noise_level: noiseLevel || null,
+        sleep_routine: sleepRoutine || null,
+        work_style: workStyle || null,
+        smoking: smokingAllowed,
+        pets: comfortableWithPets,
+        visitors: comfortableWithVisitors,
+        // Pure personality tags only (used for tag-overlap scoring)
+        lifestyle_tags: personalityTags.length > 0 ? personalityTags : null,
       });
 
       if (error) throw error;
