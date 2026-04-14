@@ -597,16 +597,30 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       </div>
 
       {/* Footer CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e5e7eb] px-6 py-4 z-[99999] pointer-events-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e5e7eb] px-6 py-4 z-[999999] pointer-events-auto">
         <button
           onClick={(e) => {
-            console.log('[DEBUG] Raw Button Click Event');
-            handleNext();
+            console.log('[DEBUG] Button Click Event. Step:', step);
+            e.preventDefault();
+            e.stopPropagation();
+            if (step === 4) {
+              handleSubmit();
+            } else {
+              handleNext();
+            }
           }}
           disabled={loading}
-          className="w-full bg-[#fe456a] text-white rounded-[8px] py-4 font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] hover:bg-[#e63d5f] active:scale-[0.98] transition-all mb-2 disabled:bg-[#d2d6db] cursor-pointer shadow-lg"
+          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+          className="w-full bg-[#fe456a] text-white rounded-[12px] py-4 font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] hover:bg-[#e63d5f] active:scale-[0.98] transition-all mb-2 disabled:bg-[#d2d6db] shadow-xl relative"
         >
-          {loading ? "Saving..." : (step === 4 ? "Finish" : "Continue")}
+          <span className="relative z-10">
+            {loading ? "Saving your preferences..." : (step === 4 ? "Complete Profile" : "Continue")}
+          </span>
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#fe456a] rounded-[12px]">
+              <Loader2 className="w-6 h-6 animate-spin text-white" />
+            </div>
+          )}
         </button>
         {step < 4 && (
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] text-[#9da4ae] leading-[16px] text-center">
