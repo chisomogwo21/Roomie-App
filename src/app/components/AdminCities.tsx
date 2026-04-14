@@ -1,47 +1,61 @@
-import { useState } from "react";
-import { Plus, ToggleLeft, ToggleRight, MapPin } from "lucide-react";
-
-interface City {
-  id: string;
-  name: string;
-  state: string;
-  country: string;
-  listingsCount: number;
-  usersCount: number;
-  enabled: boolean;
-  category: "Popular" | "Student" | "Other";
-}
-
-const mockCities: City[] = [];
+import { useState, useEffect } from "react";
+import { Plus, ToggleLeft, ToggleRight, MapPin, Loader2 } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
 
 export function AdminCities() {
-  const [cities, setCities] = useState<City[]>(mockCities);
+  const [cities, setCities] = useState<City[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newCity, setNewCity] = useState({ name: "", state: "", category: "Other" as City["category"] });
 
-  const toggleCityStatus = (cityId: string) => {
-    setCities(cities.map(city => 
-      city.id === cityId ? { ...city, enabled: !city.enabled } : city
-    ));
-  };
+  useEffect(() => {
+    async function fetchCities() {
+      try {
+        const { data: props, error } = await supabase
+          .from('properties')
+          .select('city, country');
+        
+        if (error) throw error;
 
-  const handleAddCity = () => {
-    if (newCity.name && newCity.state) {
-      const city: City = {
-        id: String(cities.length + 1),
-        name: newCity.name,
-        state: newCity.state,
-        country: "USA",
-        listingsCount: 0,
-        usersCount: 0,
-        enabled: true,
-        category: newCity.category,
-      };
-      setCities([...cities, city]);
-      setNewCity({ name: "", state: "", category: "Other" });
-      setShowAddDialog(false);
+        // Group by city and count
+        const cityMap = new Map();
+        props?.forEach(p => {
+          if (!p.city) return;
+          const key = p.city;
+          if (cityMap.has(key)) {
+            cityMap.get(key).listingsCount++;
+          } else {
+            cityMap.set(key, {
+              id: key,
+              name: p.city,
+              state: "Active",
+              country: p.country || "Rwanda",
+              listingsCount: 1,
+              usersCount: 0,
+              enabled: true,
+              category: "Other"
+            });
+          }
+        });
+
+        setCities(Array.from(cityMap.values()));
+      } catch (err) {
+        console.error("Failed to fetch cities:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  };
+    fetchCities();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12">
+        <Loader2 className="w-8 h-8 animate-spin text-[#fe456a] mb-2" />
+        <p className="text-gray-500 text-sm">Loading locations...</p>
+      </div>
+    );
+  }
 
   const getCategoryColor = (category: string) => {
     switch (category) {

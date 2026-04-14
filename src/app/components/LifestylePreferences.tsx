@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -104,7 +105,9 @@ function Badge({ label, selected, onClick }: BadgeProps) {
 }
 
 export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => void; onComplete?: () => void }) {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   // Basic Profile
   const [fullName, setFullName] = useState("");
@@ -184,7 +187,7 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
     console.log('[DEBUG] handleNext called. Current step:', step, 'Loading state:', loading);
     if (step === 1) {
       if (!fullName.trim() || !username.trim() || !location) {
-        return toast.error("Please explicitly fill out your Name, Username, and Location.");
+        return toast.error("Please fill out your Name, Username, and Location.");
       }
       setStep(2);
     } else if (step === 2) {
@@ -193,12 +196,82 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       }
       setStep(3);
     } else if (step === 3) {
-      if (personalityTags.length === 0) {
-        return toast.error("Please select at least one personality tag");
-      }
+      // Step 3 is social preferences, allowed to continue if they've looked at it
       setStep(4);
     } else if (step === 4) {
-      handleContinue();
+      handleSubmit();
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    const loadingToast = toast.loading("Saving your preferences...");
+    
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+      toast.dismiss(loadingToast);
+      toast.error("Submission taking longer than expected. Please check your connection.");
+    }, 15000);
+
+    try {
+      console.log('[DEBUG] Initiating onboarding submission...');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error("Authentication session lost. Please log in again.");
+
+      // Data mapped precisely to the 'public.profiles' table schema
+      const profileUpdates = {
+        id: user.id,
+        full_name: fullName.trim(),
+        username: username.trim(),
+        location: location,
+        preferred_location: location,
+        cleanliness_level: cleanliness,
+        noise_level: noiseLevel,
+        sleep_routine: sleepRoutine,
+        work_style: workStyle,
+        smoking: smokingAllowed,
+        pets: comfortableWithPets,
+        visitors: comfortableWithVisitors,
+        lifestyle_tags: personalityTags && personalityTags.length > 0 ? personalityTags : [],
+        onboarding_completed: true,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('[DEBUG] Upserting profile data:', profileUpdates);
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(profileUpdates);
+
+      if (error) {
+        console.error('[ERROR] Supabase upsert failed:', error);
+        if (error.message?.includes("unique constraint")) {
+          throw new Error("Username is already taken. Please choose another.");
+        }
+        throw error;
+      }
+
+      clearTimeout(safetyTimeout);
+      console.log('[SUCCESS] Profile updated. Redirecting...');
+      
+      toast.dismiss(loadingToast);
+      toast.success("All set! Redirecting to your dashboard...");
+      
+      // FORCE CLEAN REDIRECT
+      // This ensures the application re-fetches the latest profile data
+      setTimeout(() => {
+        if (onComplete) onComplete();
+        window.location.replace('/');
+      }, 500);
+
+    } catch (err: any) {
+      clearTimeout(safetyTimeout);
+      console.error("[ERROR] Workflow failed:", err);
+      toast.dismiss(loadingToast);
+      toast.error(err.message || "Failed to save preferences. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,96 +280,6 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       setStep(step - 1);
     } else if (onBack) {
       onBack();
-    }
-  };
-
-  const handleContinue = async () => {
-    if (!fullName.trim()) return toast.error("Full Name is required");
-    if (!username.trim()) return toast.error("Username is required");
-    if (!location.trim()) return toast.error("Location is required");
-
-    setLoading(true);
-    const loadingToast = toast.loading("Saving your preferences...");
-    
-    // Safety timeout to prevent infinite loading (10 seconds)
-    const safetyTimeout = setTimeout(() => {
-      setLoading(false);
-      toast.dismiss(loadingToast);
-      console.warn("Onboarding submission timed out safely.");
-    }, 10000);
-
-    try {
-      console.log('Starting onboarding submission...');
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        throw new Error("Authentication required");
-      }
-
-      const formData = {
-        full_name: fullName.trim(),
-        username: username.trim(),
-        location: location,
-        preferred_location: location,
-        cleanliness_level: cleanliness || null,
-        noise_level: noiseLevel || null,
-        sleep_routine: sleepRoutine || null,
-        work_style: workStyle || null,
-        smoking: smokingAllowed,
-        pets: comfortableWithPets,
-        visitors: comfortableWithVisitors,
-        no_smoking: noSmoking,
-        no_pets: noPets,
-        no_frequent_visitors: noFrequentVisitors,
-        lifestyle_tags: personalityTags.length > 0 ? personalityTags : null,
-      };
-
-      console.log('Sending data to Supabase:', formData);
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          ...formData,
-          onboarding_completed: true,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) {
-        console.error('Supabase upsert error:', error);
-        if (error.message?.includes("unique constraint")) {
-          throw new Error("Username is already taken");
-        }
-        throw error;
-      }
-
-      clearTimeout(safetyTimeout);
-      console.log('[DEBUG] Onboarding saved successfully in DB');
-      
-      toast.dismiss(loadingToast);
-      toast.success("Preferences saved!");
-      
-      console.log('[DEBUG] Initiating forced redirect to home...');
-      
-      // Stop loading UI
-      setLoading(false);
-
-      // FORCE navigation - replace prevents back button loops
-      setTimeout(() => {
-        console.log('[DEBUG] Performing window.location.replace("/")');
-        window.location.replace('/');
-      }, 100);
-
-      // Final attempt to notify parent if it's still mounted
-      if (onComplete) {
-        onComplete();
-      }
-
-    } catch (err: any) {
-      clearTimeout(safetyTimeout);
-      console.error("[DEBUG] Submission failed:", err);
-      toast.dismiss(loadingToast);
-      toast.error(err.message || "Failed to save preferences");
-      setLoading(false);
     }
   };
 

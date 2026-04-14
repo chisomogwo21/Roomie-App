@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { Home } from "./components/Home";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { CommunityFeed } from "./components/CommunityFeed";
 import { BottomNavigation } from "./components/BottomNavigation";
 import { LifestylePreferences } from "./components/LifestylePreferences";
@@ -48,6 +49,18 @@ import { supabase } from "../lib/supabaseClient";
 import { updateRequestStatus, sendBookingRequest } from "../lib/requests";
 import { toast } from "sonner";
 import type { ListingData } from "./components/CreateListingContext";
+
+const GlobalLoading = () => (
+  <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
+    <div className="relative">
+      <div className="w-16 h-16 border-4 border-[#f3f4f6] border-t-[#fe456a] rounded-full animate-spin"></div>
+      <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-[#fe456a] animate-pulse" />
+    </div>
+    <p className="mt-6 font-['Inter:Medium',sans-serif] text-[16px] text-[#4b5563] animate-pulse">
+      Preparing your experience...
+    </p>
+  </div>
+);
 
 export default function App() {
   const [showHomepage, setShowHomepage] = useState(false);
@@ -213,9 +226,15 @@ export default function App() {
                 } else if (profile.preferred_location) {
                   setUserLocation(profile.preferred_location);
                 }
-                setHasCompletedPreferences(profile.onboarding_completed || false);
-                if (!profile.onboarding_completed) {
+                const completed = profile.onboarding_completed || false;
+                setHasCompletedPreferences(completed);
+                
+                // Onboarding Guard Logic
+                if (!completed) {
+                  console.log("[DEBUG] User hasn't finished onboarding. Guarding...");
                   setShowOnboarding(true);
+                  setShowLogin(false);
+                  setShowSignUp(false);
                 }
               }
             }
@@ -280,6 +299,19 @@ export default function App() {
               setUserFullName(resolvedFullName);
               setUserAvatar(resolvedAvatar || session.user?.user_metadata?.avatar_url || "");
               setUserEmail(resolvedEmail);
+              
+              if (profile) {
+                setUserProfile(profile);
+                const completed = profile.onboarding_completed || false;
+                setHasCompletedPreferences(completed);
+                
+                // FIX: Added critical onboarding check to auth listener
+                if (!completed) {
+                   console.log("[DEBUG] Auth change detected: User needs onboarding.");
+                   setShowOnboarding(true);
+                   setActiveTab("home"); // Reset tab to prevent confusion
+                }
+              }
             }
           } catch (err) {
             console.warn("Failed to fetch profile on auth change:", err);
@@ -332,16 +364,9 @@ export default function App() {
     setShowPropertyDetails(true);
   };
 
-  // If app is still identifying the user, show a loading screen
+  // 1. Critical Initial Loading State
   if (isInitializing) {
-    return (
-      <div className="size-full flex flex-col items-center justify-center bg-[#fcfcfd]">
-        <Loader2 className="w-[40px] h-[40px] animate-spin text-[#fe456a] mb-4" />
-        <p className="text-[#9da4ae] font-['Inter:Medium',sans-serif] text-[14px]">
-          Getting everything ready...
-        </p>
-      </div>
-    );
+    return <GlobalLoading />;
   }
 
   // If admin dashboard is active, show it (full screen, no navigation)
