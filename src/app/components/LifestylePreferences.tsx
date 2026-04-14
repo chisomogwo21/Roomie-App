@@ -181,6 +181,7 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
   }, []);
 
   const handleNext = () => {
+    console.log('[DEBUG] handleNext called. Current step:', step, 'Loading state:', loading);
     if (step === 1) {
       if (!fullName.trim() || !username.trim() || !location) {
         return toast.error("Please explicitly fill out your Name, Username, and Location.");
@@ -269,33 +270,30 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       }
 
       clearTimeout(safetyTimeout);
-      console.log('Onboarding saved successfully in DB');
+      console.log('[DEBUG] Onboarding saved successfully in DB');
       
       toast.dismiss(loadingToast);
       toast.success("Preferences saved!");
       
-      console.log('Initiating forced redirect to home...');
+      console.log('[DEBUG] Initiating forced redirect to home...');
       
-      // Stop loading UI before the navigation takes over
+      // Stop loading UI
       setLoading(false);
 
       // FORCE navigation - replace prevents back button loops
-      window.location.replace('/');
-
-      // BACKUP fallback: if replace fails or is interrupted by unmount
       setTimeout(() => {
-        console.log('Fallback redirect triggered');
-        window.location.href = '/';
-      }, 300);
+        console.log('[DEBUG] Performing window.location.replace("/")');
+        window.location.replace('/');
+      }, 100);
 
-      // Update parent state as a secondary trigger
+      // Final attempt to notify parent if it's still mounted
       if (onComplete) {
         onComplete();
       }
 
     } catch (err: any) {
       clearTimeout(safetyTimeout);
-      console.error("Submission failed:", err);
+      console.error("[DEBUG] Submission failed:", err);
       toast.dismiss(loadingToast);
       toast.error(err.message || "Failed to save preferences");
       setLoading(false);
@@ -623,7 +621,7 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       </div>
 
       {/* Footer CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e5e7eb] px-6 py-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e5e7eb] px-6 py-4 z-[9999]">
         <button
           onClick={handleNext}
           disabled={loading}
