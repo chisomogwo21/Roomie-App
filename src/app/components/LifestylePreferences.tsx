@@ -183,43 +183,23 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
     loadExisting();
   }, []);
 
-  const handleNext = () => {
-    console.log('[DEBUG] handleNext called. Current step:', step, 'Loading state:', loading);
-    if (step === 1) {
-      if (!fullName.trim() || !username.trim() || !location) {
-        return toast.error("Please fill out your Name, Username, and Location.");
-      }
-      setStep(2);
-    } else if (step === 2) {
-      if (!cleanliness || !noiseLevel || !sleepRoutine || !workStyle) {
-        return toast.error("Please answer all living habit questions");
-      }
-      setStep(3);
-    } else if (step === 3) {
-      // Step 3 is social preferences, allowed to continue if they've looked at it
-      setStep(4);
-    } else if (step === 4) {
-      handleSubmit();
-    }
-  };
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    const loadingToast = toast.loading("Saving your preferences...");
-    
-    const safetyTimeout = setTimeout(() => {
-      setLoading(false);
-      toast.dismiss(loadingToast);
-      toast.error("Submission taking longer than expected. Please check your connection.");
-    }, 15000);
-
+  // Hoisted function declaration to prevent temporal dead zone issues
+  async function handleSubmit() {
+    console.log('[DEBUG] handleSubmit triggered');
     try {
-      console.log('[DEBUG] Initiating onboarding submission...');
-      const { data: { user } } = await supabase.auth.getUser();
+      setLoading(true);
+      const loadingToast = toast.loading("Saving your preferences...");
       
-      if (!user) throw new Error("Authentication session lost. Please log in again.");
+      const safetyTimeout = setTimeout(() => {
+        setLoading(false);
+        toast.dismiss(loadingToast);
+        toast.error("Submission took too long. Please try again.");
+      }, 15000);
 
-      // Data mapped precisely to the 'public.profiles' table schema
+      console.log('[DEBUG] Fetching user...');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Auth session not found");
+
       const profileUpdates = {
         id: user.id,
         full_name: fullName.trim(),
@@ -233,45 +213,58 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
         smoking: smokingAllowed,
         pets: comfortableWithPets,
         visitors: comfortableWithVisitors,
-        lifestyle_tags: personalityTags && personalityTags.length > 0 ? personalityTags : [],
+        lifestyle_tags: personalityTags || [],
         onboarding_completed: true,
         updated_at: new Date().toISOString()
       };
 
-      console.log('[DEBUG] Upserting profile data:', profileUpdates);
+      console.log('[DEBUG] Upserting to Supabase:', profileUpdates);
+      const { error } = await supabase.from('profiles').upsert(profileUpdates);
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(profileUpdates);
+      clearTimeout(safetyTimeout);
+      toast.dismiss(loadingToast);
 
       if (error) {
-        console.error('[ERROR] Supabase upsert failed:', error);
-        if (error.message?.includes("unique constraint")) {
-          throw new Error("Username is already taken. Please choose another.");
-        }
+        console.error('[ERROR] Upsert failed:', error);
         throw error;
       }
 
-      clearTimeout(safetyTimeout);
-      console.log('[SUCCESS] Profile updated. Redirecting...');
+      console.log('[SUCCESS] Onboarding complete');
+      toast.success("All set! Redirecting...");
       
-      toast.dismiss(loadingToast);
-      toast.success("All set! Redirecting to your dashboard...");
+      if (onComplete) onComplete();
       
-      // FORCE CLEAN REDIRECT
-      // This ensures the application re-fetches the latest profile data
       setTimeout(() => {
-        if (onComplete) onComplete();
         window.location.replace('/');
       }, 500);
 
     } catch (err: any) {
-      clearTimeout(safetyTimeout);
-      console.error("[ERROR] Workflow failed:", err);
-      toast.dismiss(loadingToast);
-      toast.error(err.message || "Failed to save preferences. Please try again.");
+      console.error('[CRITICAL] Onboarding crash:', err);
+      toast.error(err.message || "Failed to save. Please try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  const handleNext = async () => {
+    console.log('[DEBUG] Button Clicked. Step:', step, 'Loading:', loading);
+    if (loading) return;
+
+    if (step === 1) {
+      if (!fullName.trim() || !username.trim() || !location) {
+        return toast.error("Name, Username, and Location are required.");
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (!cleanliness || !noiseLevel || !sleepRoutine || !workStyle) {
+        return toast.error("Please answer all living habits.");
+      }
+      setStep(3);
+    } else if (step === 3) {
+      setStep(4);
+    } else if (step === 4) {
+      console.log('[DEBUG] Final step triggered');
+      await handleSubmit();
     }
   };
 
@@ -604,11 +597,14 @@ export function LifestylePreferences({ onBack, onComplete }: { onBack?: () => vo
       </div>
 
       {/* Footer CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e5e7eb] px-6 py-4 z-[9999]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e5e7eb] px-6 py-4 z-[99999] pointer-events-auto">
         <button
-          onClick={handleNext}
+          onClick={(e) => {
+            console.log('[DEBUG] Raw Button Click Event');
+            handleNext();
+          }}
           disabled={loading}
-          className="w-full bg-[#fe456a] text-white rounded-[8px] py-3 font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] hover:bg-[#e63d5f] transition-colors mb-2 disabled:bg-[#d2d6db]"
+          className="w-full bg-[#fe456a] text-white rounded-[8px] py-4 font-['Inter:Semi_Bold',sans-serif] font-semibold text-[16px] leading-[24px] hover:bg-[#e63d5f] active:scale-[0.98] transition-all mb-2 disabled:bg-[#d2d6db] cursor-pointer shadow-lg"
         >
           {loading ? "Saving..." : (step === 4 ? "Finish" : "Continue")}
         </button>
